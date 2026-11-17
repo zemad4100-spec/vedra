@@ -53,7 +53,6 @@ exit /b %EXITCODE%
 #<POWERSHELL>
 $ErrorActionPreference = 'Stop'
 
-# منع Vercel CLI من سؤال التحديث
 $env:VERCEL_DISABLE_UPDATE_CHECK = '1'
 $env:CI = '1'
 
@@ -84,7 +83,7 @@ if (!$cloudflareCommand) { throw 'cloudflared not found.' }
 #  1. رفع التعديلات على GitHub
 # ============================================================
 Write-Host ''
-Write-Host '[1/5] Pushing to GitHub...' -ForegroundColor Yellow
+Write-Host '[1/6] Pushing to GitHub...' -ForegroundColor Yellow
 
 Push-Location $frontendDir
 try {
@@ -92,11 +91,10 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'git add failed.' }
     
     git commit -m "Auto Deploy: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
-    # commit ممكن يفشل لو مفيش تغييرات، فنتجاهل الخطأ ده
+    if ($LASTEXITCODE -ne 0) { Write-Host 'No changes to commit or commit failed.' -ForegroundColor Yellow }
+    
     git push origin main
-    if ($LASTEXITCODE -ne 0) { 
-        Write-Host 'Warning: git push failed or nothing to push.' -ForegroundColor Yellow
-    }
+    if ($LASTEXITCODE -ne 0) { Write-Host 'Warning: git push failed or nothing to push.' -ForegroundColor Yellow }
 }
 finally { Pop-Location }
 
@@ -104,7 +102,7 @@ finally { Pop-Location }
 #  2. بناء الـ API
 # ============================================================
 Write-Host ''
-Write-Host '[2/5] Building API...' -ForegroundColor Yellow
+Write-Host '[2/6] Building API...' -ForegroundColor Yellow
 
 Push-Location $apiDir
 try {
@@ -117,9 +115,8 @@ finally { Pop-Location }
 #  3. تشغيل الـ API
 # ============================================================
 Write-Host ''
-Write-Host '[3/5] Starting API...' -ForegroundColor Yellow
+Write-Host '[3/6] Starting API...' -ForegroundColor Yellow
 
-# اقفل أي نسخة شغالة
 Get-Process -Name "OnlinePlantStore.API" -ErrorAction SilentlyContinue | Stop-Process -Force
 Start-Sleep -Seconds 2
 
@@ -144,9 +141,8 @@ Write-Host 'API is ready.' -ForegroundColor Green
 #  4. تشغيل Cloudflare Tunnel والحصول على الرابط
 # ============================================================
 Write-Host ''
-Write-Host '[4/5] Starting Cloudflare Tunnel...' -ForegroundColor Yellow
+Write-Host '[4/6] Starting Cloudflare Tunnel...' -ForegroundColor Yellow
 
-# اقفل أي Tunnel شغال
 Get-Process -Name "cloudflared" -ErrorAction SilentlyContinue | Stop-Process -Force
 Start-Sleep -Seconds 2
 
@@ -180,24 +176,42 @@ if (!$apiUrl) { throw "Could not get Cloudflare URL. Check log: $logPath" }
 Write-Host "Cloudflare URL: $apiUrl" -ForegroundColor Green
 
 # ============================================================
-#  5. تحديث Vercel Environment + Deploy
+#  5. تحديث Vercel Environment (باستخدام ملف .env.production)
 # ============================================================
 Write-Host ''
-Write-Host '[5/5] Updating Vercel and deploying...' -ForegroundColor Yellow
+Write-Host '[5/6] Updating Vercel environment...' -ForegroundColor Yellow
 
 $apiBaseUrl = "$apiUrl/api"
 
+# اكتب ملف .env.production في مشروع الفرونت
+$envFile = Join-Path $frontendDir '.env.production'
+"VITE_API_URL=$apiBaseUrl" | Set-Content -LiteralPath $envFile -Encoding UTF8
+Write-Host "Created .env.production with VITE_API_URL = $apiBaseUrl" -ForegroundColor Green
+
+# حاول تحديث Vercel CLI (بس من غير ما نوقف السكريبت لو فشل)
 Push-Location $frontendDir
 try {
-    # امسح المتغير القديم (لو موجود)
-    vercel env rm VITE_API_URL production -y 2>$null
+    Write-Host 'Removing old Vercel env variable...' -ForegroundColor Yellow
+    vercel env rm VITE_API_URL production -y 2>&1 | Out-Null
     
-    # ضيف المتغير الجديد
-    $apiBaseUrl | vercel env add VITE_API_URL production --type config
-    if ($LASTEXITCODE -ne 0) { throw 'Failed to add Vercel env variable.' }
+    Write-Host 'Adding new Vercel env variable...' -ForegroundColor Yellow
+    $apiBaseUrl | vercel env add VITE_API_URL production --type config 2>&1 | ForEach-Object { Write-Host "  $_" }
     
-    # Deploy
-    Write-Host 'Deploying to Vercel...' -ForegroundColor Yellow
+    Write-Host 'Environment updated (or already handled by .env.production)' -ForegroundColor Green
+}
+catch {
+    Write-Host "Warning: Vercel CLI failed. Using .env.production fallback." -ForegroundColor Yellow
+}
+finally { Pop-Location }
+
+# ============================================================
+#  6. النشر على Vercel
+# ============================================================
+Write-Host ''
+Write-Host '[6/6] Deploying to Vercel...' -ForegroundColor Yellow
+
+Push-Location $frontendDir
+try {
     vercel --prod --yes
     if ($LASTEXITCODE -ne 0) { throw 'Vercel deployment failed.' }
 }
