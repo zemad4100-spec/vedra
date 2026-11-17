@@ -46,7 +46,13 @@ for /L %%i in (1,1,30) do (
     )
 )
 
-if not defined TUNNEL_URL (echo ❌ Failed to get Tunnel URL & pause & exit /b 1)
+if not defined TUNNEL_URL (
+    echo ❌ Failed to get Tunnel URL.
+    echo Check log file: %LOG_OUT%
+    type "%LOG_OUT%"
+    pause
+    exit /b 1
+)
 set "API_URL=!TUNNEL_URL!/api"
 echo ✅ Tunnel URL: !API_URL!
 
