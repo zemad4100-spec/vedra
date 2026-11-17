@@ -1,85 +1,227 @@
 @echo off
-setlocal EnableExtensions EnableDelayedExpansion
-title VEDRA - FULL AUTO DEPLOY
+setlocal EnableExtensions
+title VEDRA - Auto Deploy
 
-set "FRONTEND=D:\OnlinePlantStore.Frontend"
-set "BACKEND=D:\OnlinePlantStore.API"
-set "API_PORT=5170"
-set "SITE=https://vedra-olive.vercel.app"
-set "LOG_OUT=%TEMP%\vedra_tunnel_out.log"
+REM ============================================================
+REM  Wrapper: Opens new CMD window with /k to keep it open
+REM ============================================================
+if /i "%~1"=="--inner" goto :inner
 
-cls
-echo ==================================================
-echo          VEDRA - FULL AUTO DEPLOY
-echo ==================================================
+start "VEDRA Deploy" cmd /k ""%~f0" --inner"
+exit /b
+
+:inner
+set "SELF=%~f0"
+set "EXITCODE=0"
+
+echo.
+echo ===== Starting PowerShell deploy =====
 echo.
 
-REM 1. PUSH TO GITHUB
-echo [1/7] Pushing to GitHub...
-cd /d "%FRONTEND%"
-git add .
-git commit -m "Auto Deploy: %date% %time%"
-git push origin main
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+  "$f=$env:SELF;" ^
+  "$a=Get-Content -LiteralPath $f;" ^
+  "$i=[array]::IndexOf($a,'#<POWERSHELL>');" ^
+  "if($i -lt 0){Write-Host 'PowerShell section missing' -ForegroundColor Red; exit 2};" ^
+  "$tmp=Join-Path $env:TEMP ('VedraAutoDeploy-' + [guid]::NewGuid().ToString('N') + '.ps1');" ^
+  "$scriptExit=0;" ^
+  "try {" ^
+  "  $a[($i+1)..($a.Length-1)] | Set-Content -LiteralPath $tmp -Encoding UTF8;" ^
+  "  & $tmp;" ^
+  "  if($null -ne $LASTEXITCODE){$scriptExit=$LASTEXITCODE}" ^
+  "} catch {" ^
+  "  Write-Host '';" ^
+  "  Write-Host '===== ERROR =====' -ForegroundColor Red;" ^
+  "  Write-Host $_ -ForegroundColor Red;" ^
+  "  Write-Host '=================' -ForegroundColor Red;" ^
+  "  $scriptExit=1" ^
+  "} finally {" ^
+  "  Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue" ^
+  "};" ^
+  "exit $scriptExit"
 
-REM 2. KILL OLD PROCESSES
-echo [2/7] Stopping old processes...
-taskkill /F /IM "OnlinePlantStore.API.exe" >nul 2>&1
-taskkill /F /IM "cloudflared.exe" >nul 2>&1
-timeout /t 2 /nobreak >nul
+set "EXITCODE=%ERRORLEVEL%"
 
-REM 3. START API
-echo [3/7] Starting API...
-start "Vedra API" cmd /k "cd /d %BACKEND% && dotnet run --urls http://0.0.0.0:%API_PORT%"
-timeout /t 5 /nobreak >nul
+echo.
+echo ===== Exit code: %EXITCODE% =====
+echo.
+echo Press any key to close this window...
+pause >nul
+exit /b %EXITCODE%
 
-REM 4. START TUNNEL
-echo [4/7] Starting Cloudflare Tunnel...
-del "%LOG_OUT%" 2>nul
-start "Vedra Tunnel" cmd /c "cloudflared tunnel --url http://localhost:%API_PORT% > "%LOG_OUT%" 2>&1"
 
-echo [5/7] Waiting for Tunnel URL...
-set "TUNNEL_URL="
-for /L %%i in (1,1,30) do (
-    if not defined TUNNEL_URL (
-        for /f "usebackq delims=" %%U in (`powershell -NoProfile -Command "$m=[regex]::Match((Get-Content '%LOG_OUT%' -Raw -ErrorAction SilentlyContinue),'https://[a-zA-Z0-9-]+\.trycloudflare\.com'); if($m.Success){$m.Value}"`) do set "TUNNEL_URL=%%U"
-        if not defined TUNNEL_URL timeout /t 2 /nobreak >nul
-    )
+#<POWERSHELL>
+$ErrorActionPreference = 'Stop'
+
+# منع Vercel CLI من سؤال التحديث
+$env:VERCEL_DISABLE_UPDATE_CHECK = '1'
+$env:CI = '1'
+
+# ============================================================
+#  إعدادات المشروع (Vedra)
+# ============================================================
+$projectName  = 'vedra'
+$apiDir       = 'D:\OnlinePlantStore.API'
+$frontendDir  = 'D:\OnlinePlantStore.Frontend'
+$port         = 5170
+$stateFile    = Join-Path $env:TEMP 'VedraDeploy.state.json'
+
+Write-Host '===== VEDRA AUTO DEPLOY =====' -ForegroundColor Cyan
+Write-Host "API Dir      : $apiDir"
+Write-Host "Frontend Dir : $frontendDir"
+Write-Host "Port         : $port"
+
+# ============================================================
+#  التحقق من الأدوات
+# ============================================================
+$vercelCommand     = Get-Command vercel      -ErrorAction SilentlyContinue
+$cloudflareCommand = Get-Command cloudflared -ErrorAction SilentlyContinue
+
+if (!$vercelCommand)     { throw 'Vercel CLI not found.' }
+if (!$cloudflareCommand) { throw 'cloudflared not found.' }
+
+# ============================================================
+#  1. رفع التعديلات على GitHub
+# ============================================================
+Write-Host ''
+Write-Host '[1/5] Pushing to GitHub...' -ForegroundColor Yellow
+
+Push-Location $frontendDir
+try {
+    git add .
+    if ($LASTEXITCODE -ne 0) { throw 'git add failed.' }
+    
+    git commit -m "Auto Deploy: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    # commit ممكن يفشل لو مفيش تغييرات، فنتجاهل الخطأ ده
+    git push origin main
+    if ($LASTEXITCODE -ne 0) { 
+        Write-Host 'Warning: git push failed or nothing to push.' -ForegroundColor Yellow
+    }
+}
+finally { Pop-Location }
+
+# ============================================================
+#  2. بناء الـ API
+# ============================================================
+Write-Host ''
+Write-Host '[2/5] Building API...' -ForegroundColor Yellow
+
+Push-Location $apiDir
+try {
+    dotnet build -c Release
+    if ($LASTEXITCODE -ne 0) { throw 'dotnet build failed.' }
+}
+finally { Pop-Location }
+
+# ============================================================
+#  3. تشغيل الـ API
+# ============================================================
+Write-Host ''
+Write-Host '[3/5] Starting API...' -ForegroundColor Yellow
+
+# اقفل أي نسخة شغالة
+Get-Process -Name "OnlinePlantStore.API" -ErrorAction SilentlyContinue | Stop-Process -Force
+Start-Sleep -Seconds 2
+
+Start-Process -FilePath 'cmd.exe' -ArgumentList @(
+    '/k',
+    "cd /d `"$apiDir`" && dotnet run --no-build --urls http://0.0.0.0:$port"
 )
 
-if not defined TUNNEL_URL (
-    echo ❌ Failed to get Tunnel URL.
-    echo Check log file: %LOG_OUT%
-    type "%LOG_OUT%"
-    pause
-    exit /b 1
-)
-set "API_URL=!TUNNEL_URL!/api"
-echo ✅ Tunnel URL: !API_URL!
+$apiReady = $false
+for ($n = 0; $n -lt 30; $n++) {
+    Start-Sleep -Seconds 2
+    try {
+        $null = Invoke-RestMethod "http://localhost:$port/api/products" -TimeoutSec 3
+        $apiReady = $true
+        break
+    } catch {}
+}
+if (!$apiReady) { throw 'API did not respond.' }
+Write-Host 'API is ready.' -ForegroundColor Green
 
-REM 5. UPDATE VERCEL ENV
-echo [5/7] Updating Vercel Environment...
-cd /d "%FRONTEND%"
-vercel env rm VITE_API_URL production -y >nul 2>&1
-echo !API_URL! | vercel env add VITE_API_URL production --type config
-if errorlevel 1 (echo ❌ Failed to add Vercel env & pause & exit /b 1)
+# ============================================================
+#  4. تشغيل Cloudflare Tunnel والحصول على الرابط
+# ============================================================
+Write-Host ''
+Write-Host '[4/5] Starting Cloudflare Tunnel...' -ForegroundColor Yellow
 
-REM 6. DEPLOY TO VERCEL
-echo [6/7] Deploying to Vercel...
-vercel --prod --yes
-if errorlevel 1 (echo ❌ Vercel deployment failed & pause & exit /b 1)
+# اقفل أي Tunnel شغال
+Get-Process -Name "cloudflared" -ErrorAction SilentlyContinue | Stop-Process -Force
+Start-Sleep -Seconds 2
 
-REM 7. OPEN SITE
-echo [7/7] Opening Site...
-start "" "%SITE%"
+$logPath = Join-Path $env:TEMP ('VedraCloudflare-' + [guid]::NewGuid().ToString('N') + '.log')
 
-echo.
-echo ==================================================
-echo             ✅ DEPLOYMENT SUCCESS
-echo ==================================================
-echo.
-echo Frontend : %SITE%
-echo Backend  : !API_URL!
-echo.
-echo Keep the API and Tunnel windows open!
-echo.
-pause
+$tunnelProc = Start-Process `
+    -FilePath $cloudflareCommand.Source `
+    -ArgumentList @(
+        'tunnel',
+        '--url', "http://localhost:$port",
+        '--logfile', "`"$logPath`"",
+        '--loglevel', 'info'
+    ) `
+    -PassThru -WindowStyle Hidden
+
+$apiUrl = $null
+for ($n = 0; $n -lt 60; $n++) {
+    Start-Sleep -Seconds 2
+    if ($tunnelProc.HasExited) {
+        throw "Cloudflare exited. Check log: $logPath"
+    }
+    if (Test-Path $logPath) {
+        $log = Get-Content -LiteralPath $logPath -Raw -ErrorAction SilentlyContinue
+        if ($log -match 'https://[a-z0-9-]+\.trycloudflare\.com') {
+            $apiUrl = $Matches[0]
+            break
+        }
+    }
+}
+if (!$apiUrl) { throw "Could not get Cloudflare URL. Check log: $logPath" }
+Write-Host "Cloudflare URL: $apiUrl" -ForegroundColor Green
+
+# ============================================================
+#  5. تحديث Vercel Environment + Deploy
+# ============================================================
+Write-Host ''
+Write-Host '[5/5] Updating Vercel and deploying...' -ForegroundColor Yellow
+
+$apiBaseUrl = "$apiUrl/api"
+
+Push-Location $frontendDir
+try {
+    # امسح المتغير القديم (لو موجود)
+    vercel env rm VITE_API_URL production -y 2>$null
+    
+    # ضيف المتغير الجديد
+    $apiBaseUrl | vercel env add VITE_API_URL production --type config
+    if ($LASTEXITCODE -ne 0) { throw 'Failed to add Vercel env variable.' }
+    
+    # Deploy
+    Write-Host 'Deploying to Vercel...' -ForegroundColor Yellow
+    vercel --prod --yes
+    if ($LASTEXITCODE -ne 0) { throw 'Vercel deployment failed.' }
+}
+finally { Pop-Location }
+
+# ============================================================
+#  حفظ الحالة وفتح الموقع
+# ============================================================
+$newState = [pscustomobject]@{
+    ProjectName = $projectName
+    ApiUrl      = $apiBaseUrl
+    Port        = $port
+    UpdatedAt   = (Get-Date).ToString('o')
+}
+$newState | ConvertTo-Json | Set-Content -LiteralPath $stateFile -Encoding UTF8
+
+$siteUrl = "https://vedra-olive.vercel.app"
+Start-Process $siteUrl
+
+Write-Host ''
+Write-Host '===== DEPLOYMENT FINISHED =====' -ForegroundColor Green
+Write-Host "Frontend   : $siteUrl"
+Write-Host "Backend    : $apiBaseUrl"
+Write-Host "Vercel Proj: $projectName"
+Write-Host ''
+Write-Host 'Keep API and Tunnel running.'
+exit 0
