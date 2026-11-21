@@ -10,6 +10,7 @@ export default function AdminProducts() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [imageUrlInput, setImageUrlInput] = useState(''); // ✅ حالة إدخال رابط الصورة
 
   const [form, setForm] = useState({
     categoryId: 1,
@@ -76,6 +77,7 @@ export default function AdminProducts() {
       isActive: true,
       imageUrls: [],
     });
+    setImageUrlInput('');
     setError('');
     setShowModal(true);
   };
@@ -104,6 +106,7 @@ export default function AdminProducts() {
       isActive: product.isActive,
       imageUrls: product.imageUrls || [],
     });
+    setImageUrlInput('');
     setError('');
     setShowModal(true);
   };
@@ -138,6 +141,13 @@ export default function AdminProducts() {
     } finally {
       setUploading(false);
     }
+  };
+
+  // ✅ دالة إضافة صورة من لينك
+  const handleAddImageUrl = () => {
+    if (!imageUrlInput.trim()) return;
+    setForm(prev => ({ ...prev, imageUrls: [...prev.imageUrls, imageUrlInput.trim()] }));
+    setImageUrlInput('');
   };
 
   const removeImage = (index) => {
@@ -369,6 +379,7 @@ export default function AdminProducts() {
                 />
               </div>
 
+              {/* ✅ قسم الصور - رفع + لينك */}
               <div className="bg-gray-50 p-4 rounded-xl">
                 <label className="text-sm font-bold block mb-2">صور المنتج</label>
                 
@@ -376,7 +387,12 @@ export default function AdminProducts() {
                   <div className="grid grid-cols-4 gap-2 mb-3">
                     {form.imageUrls.map((url, idx) => (
                       <div key={idx} className="relative">
-                        <img src={url} alt={`img-${idx}`} className="w-full h-20 object-cover rounded-lg" />
+                        <img 
+                          src={url} 
+                          alt={`img-${idx}`} 
+                          className="w-full h-20 object-cover rounded-lg" 
+                          onError={(e) => { e.target.src = 'https://via.placeholder.com/80?text=Error'; }}
+                        />
                         <button
                           type="button"
                           onClick={() => removeImage(idx)}
@@ -387,7 +403,8 @@ export default function AdminProducts() {
                   </div>
                 )}
 
-                <label className="block border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:border-brand-main transition">
+                {/* رفع من الجهاز */}
+                <label className="block border-2 border-dashed border-gray-300 rounded-xl p-4 text-center cursor-pointer hover:border-brand-main transition mb-2">
                   <input
                     type="file"
                     accept="image/*"
@@ -400,11 +417,33 @@ export default function AdminProducts() {
                     <span className="text-gray-600">جاري رفع الصور...</span>
                   ) : (
                     <>
-                      <p className="text-3xl mb-2">📷</p>
-                      <p className="text-sm font-bold text-gray-600">اضغط لاختيار صور</p>
+                      <p className="text-2xl mb-1">📷</p>
+                      <p className="text-sm font-bold text-gray-600">اضغط لاختيار صور من جهازك</p>
                     </>
                   )}
                 </label>
+
+                {/* ✅ إضافة لينك صورة */}
+                <div className="mt-3">
+                  <label className="text-sm font-bold block mb-1">أو أضف رابط صورة من النت</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      placeholder="https://example.com/image.jpg"
+                      className="input-field flex-1"
+                      value={imageUrlInput}
+                      onChange={(e) => setImageUrlInput(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddImageUrl())}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddImageUrl}
+                      className="btn-primary px-4"
+                    >
+                      إضافة
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
