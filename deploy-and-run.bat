@@ -1,6 +1,6 @@
 @echo off
 setlocal EnableExtensions
-title VEDRA - Auto Deploy
+title VEDRA - Auto Deploy (ngrok)
 
 REM ============================================================
 REM  Wrapper: Opens new CMD window with /k to keep it open
@@ -65,19 +65,24 @@ $frontendDir  = 'D:\OnlinePlantStore.Frontend'
 $port         = 5170
 $stateFile    = Join-Path $env:TEMP 'VedraDeploy.state.json'
 
-Write-Host '===== VEDRA AUTO DEPLOY =====' -ForegroundColor Cyan
+# ✅ الرابط الثابت بتاع ngrok
+$ngrokDomain  = 'kilogram-parabola-showing.ngrok-free.dev'
+$apiBaseUrl   = "https://$ngrokDomain/api"
+
+Write-Host '===== VEDRA AUTO DEPLOY (ngrok) =====' -ForegroundColor Cyan
 Write-Host "API Dir      : $apiDir"
 Write-Host "Frontend Dir : $frontendDir"
 Write-Host "Port         : $port"
+Write-Host "API URL      : $apiBaseUrl"
 
 # ============================================================
 #  التحقق من الأدوات
 # ============================================================
-$vercelCommand     = Get-Command vercel      -ErrorAction SilentlyContinue
-$cloudflareCommand = Get-Command cloudflared -ErrorAction SilentlyContinue
+$vercelCommand = Get-Command vercel -ErrorAction SilentlyContinue
+$ngrokCommand  = Get-Command ngrok  -ErrorAction SilentlyContinue
 
-if (!$vercelCommand)     { throw 'Vercel CLI not found.' }
-if (!$cloudflareCommand) { throw 'cloudflared not found.' }
+if (!$vercelCommand) { throw 'Vercel CLI not found.' }
+if (!$ngrokCommand)  { throw 'ngrok not found.' }
 
 # ============================================================
 #  1. رفع التعديلات على GitHub
@@ -138,42 +143,23 @@ if (!$apiReady) { throw 'API did not respond.' }
 Write-Host 'API is ready.' -ForegroundColor Green
 
 # ============================================================
-#  4. تشغيل Cloudflare Tunnel والحصول على الرابط
+#  4. تشغيل ngrok
 # ============================================================
 Write-Host ''
-Write-Host '[4/6] Starting Cloudflare Tunnel...' -ForegroundColor Yellow
+Write-Host '[4/6] Starting ngrok...' -ForegroundColor Yellow
 
-Get-Process -Name "cloudflared" -ErrorAction SilentlyContinue | Stop-Process -Force
+Get-Process -Name "ngrok" -ErrorAction SilentlyContinue | Stop-Process -Force
 Start-Sleep -Seconds 2
 
-$logPath = Join-Path $env:TEMP ('VedraCloudflare-' + [guid]::NewGuid().ToString('N') + '.log')
+# شغل ngrok في نافذة منفصلة
+Start-Process -FilePath 'cmd.exe' -ArgumentList @(
+    '/k',
+    "ngrok http $port --domain=$ngrokDomain"
+)
 
-$tunnelProc = Start-Process `
-    -FilePath $cloudflareCommand.Source `
-    -ArgumentList @(
-        'tunnel',
-        '--url', "http://localhost:$port",
-        '--logfile', "`"$logPath`"",
-        '--loglevel', 'info'
-    ) `
-    -PassThru -WindowStyle Hidden
-
-$apiUrl = $null
-for ($n = 0; $n -lt 60; $n++) {
-    Start-Sleep -Seconds 2
-    if ($tunnelProc.HasExited) {
-        throw "Cloudflare exited. Check log: $logPath"
-    }
-    if (Test-Path $logPath) {
-        $log = Get-Content -LiteralPath $logPath -Raw -ErrorAction SilentlyContinue
-        if ($log -match 'https://[a-z0-9-]+\.trycloudflare\.com') {
-            $apiUrl = $Matches[0]
-            break
-        }
-    }
-}
-if (!$apiUrl) { throw "Could not get Cloudflare URL. Check log: $logPath" }
-Write-Host "Cloudflare URL: $apiUrl" -ForegroundColor Green
+# استنى شوية عشان ngrok يشتغل
+Start-Sleep -Seconds 5
+Write-Host "ngrok is running with domain: $ngrokDomain" -ForegroundColor Green
 
 # ============================================================
 #  5. تحديث Vercel Environment (باستخدام ملف .env.production)
@@ -181,14 +167,12 @@ Write-Host "Cloudflare URL: $apiUrl" -ForegroundColor Green
 Write-Host ''
 Write-Host '[5/6] Updating Vercel environment...' -ForegroundColor Yellow
 
-$apiBaseUrl = "$apiUrl/api"
-
 # اكتب ملف .env.production في مشروع الفرونت
 $envFile = Join-Path $frontendDir '.env.production'
 "VITE_API_URL=$apiBaseUrl" | Set-Content -LiteralPath $envFile -Encoding UTF8
 Write-Host "Created .env.production with VITE_API_URL = $apiBaseUrl" -ForegroundColor Green
 
-# حاول تحديث Vercel CLI (بس من غير ما نوقف السكريبت لو فشل)
+# حاول تحديث Vercel CLI
 Push-Location $frontendDir
 try {
     Write-Host 'Removing old Vercel env variable...' -ForegroundColor Yellow
@@ -237,5 +221,5 @@ Write-Host "Frontend   : $siteUrl"
 Write-Host "Backend    : $apiBaseUrl"
 Write-Host "Vercel Proj: $projectName"
 Write-Host ''
-Write-Host 'Keep API and Tunnel running.'
+Write-Host 'Keep API and ngrok running.'
 exit 0
