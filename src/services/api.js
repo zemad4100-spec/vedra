@@ -5,12 +5,16 @@ const api = axios.create({
   baseURL: 'https://kilogram-parabola-showing.ngrok-free.dev/api',
 });
 
-// ✅ Interceptor للطلبات (بيضيف التوكن)
+// ✅ Interceptor للطلبات (بيضيف التوكن + هيدر ngrok)
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('accessToken');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  
+  // ✅ الهيدر ده بيعدي صفحة تحذير ngrok
+  config.headers['ngrok-skip-browser-warning'] = '1';
+  
   return config;
 });
 
@@ -29,7 +33,7 @@ api.interceptors.response.use(
   }
 );
 
-// ✅ خدمات التقارير (اللي كانت ناقصة)
+// ✅ خدمات التقارير
 export const reportService = {
   getDashboardStats: () => api.get('/admin/dashboard'),
   getAllOrders: (status = '') => api.get('/admin/orders', { params: { status } }),
