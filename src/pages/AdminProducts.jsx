@@ -111,7 +111,7 @@ export default function AdminProducts() {
     setShowModal(true);
   };
 
-  // ✅ رفع الصور للسيرفر (الباك إند)
+  // ✅ رفع الصور للسيرفر (الباك إند) مع معالجة الرابط
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
@@ -126,12 +126,20 @@ export default function AdminProducts() {
         const formData = new FormData();
         formData.append('file', file);
 
-        // بنستخدم الـ endpoint الصح: /api/upload/image
-        // لو الـ api instance بيضيف /api تلقائي، سيبها كده
         const res = await api.post('/upload/image', formData);
 
         if (res.data.success && res.data.data.url) {
-          uploadedUrls.push(res.data.data.url);
+          let imageUrl = res.data.data.url;
+          
+          // ✅ الحل: لو الرابط مش بيبدأ بـ http، نضيف الدومين
+          if (!imageUrl.startsWith('http')) {
+            if (!imageUrl.startsWith('/')) {
+              imageUrl = '/' + imageUrl;
+            }
+            imageUrl = `https://kilogram-parabola-showing.ngrok-free.dev${imageUrl}`;
+          }
+          
+          uploadedUrls.push(imageUrl);
         } else {
           throw new Error(res.data.message || 'فشل رفع الصورة');
         }
