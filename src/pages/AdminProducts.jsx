@@ -134,16 +134,21 @@ export default function AdminProducts() {
           // 1. نشيل أي باراميترز غريبة
           imageUrl = imageUrl.split('?')[0].split('#')[0];
 
-          // 2. لو مش بيبدأ بـ http، نضيف الدومين
+          // 2. نتأكد إن الرابط آمن (https)
+          imageUrl = imageUrl.replace('http://', 'https://');
+
+          // 3. نشيل أي تكرار للدومين
+          const domain = 'https://kilogram-parabola-showing.ngrok-free.dev';
+          if (imageUrl.includes(domain + domain)) {
+            imageUrl = imageUrl.replace(domain + domain, domain);
+          }
+          
+          // 4. لو مش بيبدأ بـ http، نضيف الدومين
           if (!imageUrl.startsWith('http')) {
             if (!imageUrl.startsWith('/')) {
               imageUrl = '/' + imageUrl;
             }
-            imageUrl = `https://kilogram-parabola-showing.ngrok-free.dev${imageUrl}`;
-          } 
-          // 3. لو بيبدأ بـ http، نحوله لـ https
-          else if (imageUrl.startsWith('http://')) {
-             imageUrl = imageUrl.replace('http://', 'https://');
+            imageUrl = `${domain}${imageUrl}`;
           }
 
           uploadedUrls.push(imageUrl);
