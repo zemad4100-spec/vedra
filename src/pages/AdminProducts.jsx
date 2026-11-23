@@ -111,7 +111,7 @@ export default function AdminProducts() {
     setShowModal(true);
   };
 
-  // ✅ رفع الصور للسيرفر (الباك إند) مع تنظيف الرابط
+  // ✅ رفع الصور مع معالجة الرابط النهائي
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
@@ -131,19 +131,20 @@ export default function AdminProducts() {
         if (res.data.success && res.data.data.url) {
           let imageUrl = res.data.data.url;
 
-          // 1. لو الرابط مش بيبدأ بـ http، نضيف الدومين
+          // 1. نشيل أي باراميترز غريبة
+          imageUrl = imageUrl.split('?')[0].split('#')[0];
+
+          // 2. لو مش بيبدأ بـ http، نضيف الدومين
           if (!imageUrl.startsWith('http')) {
             if (!imageUrl.startsWith('/')) {
               imageUrl = '/' + imageUrl;
             }
             imageUrl = `https://kilogram-parabola-showing.ngrok-free.dev${imageUrl}`;
+          } 
+          // 3. لو بيبدأ بـ http، نحوله لـ https
+          else if (imageUrl.startsWith('http://')) {
+             imageUrl = imageUrl.replace('http://', 'https://');
           }
-
-          // 2. نشيل أي باراميترز غريبة في آخر الرابط (زي ngrok-skip-browser-warning)
-          imageUrl = imageUrl.split('?')[0].split('#')[0];
-
-          // 3. نتأكد إن الرابط آمن (https)
-          imageUrl = imageUrl.replace('http://', 'https://');
 
           uploadedUrls.push(imageUrl);
         } else {
