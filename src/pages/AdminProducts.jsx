@@ -111,7 +111,7 @@ export default function AdminProducts() {
     setShowModal(true);
   };
 
-  // ✅ رفع الصور مع معالجة الرابط النهائي
+  // ✅ رفع الصور مع سطر تشخيص
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
@@ -127,6 +127,9 @@ export default function AdminProducts() {
         formData.append('file', file);
 
         const res = await api.post('/upload/image', formData);
+
+        // ✅ سطر التشخيص المهم
+        console.log('الرابط الراجع من الباك إند:', res.data.data.url);
 
         if (res.data.success && res.data.data.url) {
           let imageUrl = res.data.data.url;
