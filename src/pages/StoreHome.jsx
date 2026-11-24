@@ -28,7 +28,7 @@ export default function StoreHome() {
     fetchData();
   }, []);
 
-  // ✅ دالة إضافة المنتج للسلة مع سطر التشخيص
+  // ✅ دالة إضافة المنتج للسلة
   const handleAddToCart = async (productId) => {
     try {
       const res = await api.post('/cart/items', { 
@@ -36,11 +36,15 @@ export default function StoreHome() {
         quantity: 1 
       });
       
-      // ✅ سطر التشخيص المهم
-      console.log('Response from AddToCart:', res.data);
-
       if (res.data.success) {
         showSuccess('تمت الإضافة للسلة بنجاح 🛒');
+        
+        // ✅ حل سريع: تحديث الصفحة عشان السلة تتحدث
+        // (الأفضل استخدام CartContext، بس ده هيشتغل دلوقتي)
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000); // استنى ثانية عشان رسالة النجاح تظهر
+
       } else {
         showError(res.data.message || 'فشل الإضافة للسلة');
       }
@@ -164,7 +168,7 @@ export default function StoreHome() {
                         onClick={(e) => { 
                           e.preventDefault(); 
                           e.stopPropagation(); 
-                          handleAddToCart(p.id); // ✅ استدعاء دالة الإضافة
+                          handleAddToCart(p.id); 
                         }}
                       >
                         +
