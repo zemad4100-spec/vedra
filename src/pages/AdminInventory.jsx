@@ -55,16 +55,27 @@ export default function AdminInventory() {
     }
     setAdding(true);
     try {
-      // ✅ التعديل المهم: أسماء الحقول بقت كابيتال عشان تطابق الباك إند
-      await api.post('/admin/inventory/add-stock', {
+      const payload = {
         ProductId: selectedProduct.productId,
         Quantity: addQty,
+        WarehouseId: 1, // ✅ جربنا نبعت رقم ثابت للمخزن
         Notes: addNotes || 'إضافة كمية يدوية'
-      });
+      };
+
+      // ✅ اطبع البيانات اللي بتبعت
+      console.log('Payload sent:', payload);
+
+      const res = await api.post('/admin/inventory/add-stock', payload);
+      
+      // ✅ اطبع الـ Response
+      console.log('Response:', res.data);
+      
       setShowAddModal(false);
       loadData();
       showSuccess('✅ تمت إضافة الكمية بنجاح');
     } catch (err) {
+      // ✅ اطبع تفاصيل الخطأ
+      console.error('Error Response:', err.response?.data);
       showError('فشل: ' + (err.response?.data?.message || err.message));
     } finally {
       setAdding(false);
