@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { showSuccess, showError } from '../utils/toast'; // ✅ استيراد رسائل التنبيه
 
 export default function StoreHome() {
   const navigate = useNavigate();
@@ -26,6 +27,20 @@ export default function StoreHome() {
     };
     fetchData();
   }, []);
+
+  // ✅ دالة إضافة المنتج للسلة
+  const handleAddToCart = async (productId) => {
+    try {
+      await api.post('/cart/items', { 
+        productId: productId, 
+        quantity: 1 
+      });
+      showSuccess('تمت الإضافة للسلة بنجاح 🛒');
+    } catch (err) {
+      const msg = err.response?.data?.message || 'فشل الإضافة للسلة، تأكد من تسجيل الدخول';
+      showError(msg);
+    }
+  };
 
   const filteredProducts = filter === 'all' ? products : products.filter(p => {
     if (filter === 'natural') return p.isNatural;
@@ -137,7 +152,11 @@ export default function StoreHome() {
                       </span>
                       <button 
                         className="w-11 h-11 bg-brand-cream text-brand-dark rounded-xl font-bold text-xl hover:bg-brand-dark hover:text-white transition"
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                        onClick={(e) => { 
+                          e.preventDefault(); 
+                          e.stopPropagation(); 
+                          handleAddToCart(p.id); // ✅ استدعاء دالة الإضافة
+                        }}
                       >
                         +
                       </button>
