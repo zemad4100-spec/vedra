@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import { showSuccess, showError } from '../utils/toast'; // ✅ استيراد رسائل التنبيه
+import { showSuccess, showError } from '../utils/toast';
 
 export default function StoreHome() {
   const navigate = useNavigate();
@@ -28,15 +28,24 @@ export default function StoreHome() {
     fetchData();
   }, []);
 
-  // ✅ دالة إضافة المنتج للسلة
+  // ✅ دالة إضافة المنتج للسلة مع سطر التشخيص
   const handleAddToCart = async (productId) => {
     try {
-      await api.post('/cart/items', { 
+      const res = await api.post('/cart/items', { 
         productId: productId, 
         quantity: 1 
       });
-      showSuccess('تمت الإضافة للسلة بنجاح 🛒');
+      
+      // ✅ سطر التشخيص المهم
+      console.log('Response from AddToCart:', res.data);
+
+      if (res.data.success) {
+        showSuccess('تمت الإضافة للسلة بنجاح 🛒');
+      } else {
+        showError(res.data.message || 'فشل الإضافة للسلة');
+      }
     } catch (err) {
+      console.error('Error adding to cart:', err.response?.data);
       const msg = err.response?.data?.message || 'فشل الإضافة للسلة، تأكد من تسجيل الدخول';
       showError(msg);
     }
