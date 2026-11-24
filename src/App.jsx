@@ -25,6 +25,9 @@ import AdminCustomers from './pages/AdminCustomers';
 import POSPage from './pages/POSPage';
 import Login from './pages/Login';
 
+// ✅ استيراد زرار الواتساب
+import WhatsAppButton from './components/WhatsAppButton';
+
 function RequireAuth({ children, roles }) {
   const token = localStorage.getItem('accessToken');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -106,6 +109,9 @@ function App() {
           <Route path="pos" element={<POSPage />} />
         </Route>
       </Routes>
+
+      {/* ✅ إضافة زرار الواتساب ليظهر في كل الصفحات */}
+      <WhatsAppButton />
     </BrowserRouter>
   );
 }
