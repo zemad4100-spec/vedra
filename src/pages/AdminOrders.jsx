@@ -242,11 +242,16 @@ export default function AdminOrders() {
                     </span>
                   </td>
 
-                  {/* التاريخ */}
+                  {/* التاريخ (تم إصلاحه) */}
                   <td className="p-4 md:table-cell block text-right md:text-right border-b md:border-none">
                     <span className="md:hidden font-bold text-gray-400 text-xs ml-2">التاريخ:</span>
                     <span className="text-sm text-gray-500">
-                      {new Date(item.createdAt).toLocaleDateString('ar-EG')}
+                      {new Date(item.createdAt).toLocaleDateString('ar-EG', { 
+                        timeZone: 'Africa/Cairo',
+                        year: 'numeric', 
+                        month: 'numeric', 
+                        day: 'numeric' 
+                      })}
                     </span>
                   </td>
 
