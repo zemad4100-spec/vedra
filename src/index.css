@@ -123,3 +123,14 @@
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out;
 }
+
+/* ✅ حركة اهتزاز زرار الواتساب */
+@keyframes shake {
+  0% { transform: rotate(0deg); }
+  5% { transform: rotate(-10deg); }
+  10% { transform: rotate(10deg); }
+  15% { transform: rotate(-10deg); }
+  20% { transform: rotate(10deg); }
+  25% { transform: rotate(0deg); }
+  100% { transform: rotate(0deg); }
+}
