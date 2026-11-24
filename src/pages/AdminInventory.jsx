@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
-import { showSuccess, showError } from '../utils/toast'; // استخدمنا التوست بدل alert
+import { showSuccess, showError } from '../utils/toast';
 
 export default function AdminInventory() {
   const [inventory, setInventory] = useState([]);
@@ -55,10 +55,11 @@ export default function AdminInventory() {
     }
     setAdding(true);
     try {
+      // ✅ التعديل المهم: أسماء الحقول بقت كابيتال عشان تطابق الباك إند
       await api.post('/admin/inventory/add-stock', {
-        productId: selectedProduct.productId,
-        quantity: addQty,
-        notes: addNotes || 'إضافة كمية يدوية'
+        ProductId: selectedProduct.productId,
+        Quantity: addQty,
+        Notes: addNotes || 'إضافة كمية يدوية'
       });
       setShowAddModal(false);
       loadData();
