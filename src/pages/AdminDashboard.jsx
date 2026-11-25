@@ -3,25 +3,18 @@ import api from '../services/api';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
-  const [bestSellers, setBestSellers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // ✅ بنجيب الإحصائيات من الباك إند بتاعك
-        const [statsRes, bestSellersRes] = await Promise.all([
-          api.get('/admin/dashboard'), // الـ Endpoint بتاع الإحصائيات
-          api.get('/products/best-sellers'), // الـ Endpoint بتاع الأكثر مبيعاً
-        ]);
-        
-        // ✅ بنحط البيانات اللي راجعة في الـ State
-        setStats(statsRes.data.data);
-        setBestSellers(bestSellersRes.data.data || []);
+        // بنجيب البيانات من الـ Endpoint بتاعنا
+        const res = await api.get('/admin/dashboard');
+        setStats(res.data.data);
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
-        setError('فشل تحميل البيانات، تأكد من اتصالك بالإنترنت أو من تسجيل الدخول.');
+        setError('فشل تحميل البيانات، تأكد من تسجيل الدخول أو الاتصال بالإنترنت.');
       } finally {
         setLoading(false);
       }
@@ -33,7 +26,7 @@ export default function AdminDashboard() {
   
   if (error) return <div className="text-center py-20 text-red-500 font-bold">{error}</div>;
 
-  // ✅ لو الباك إند رجع بيانات، بنعرضها. لو لسه، بنعرض أصفار
+  // لو الباك إند رجع بيانات، بنعرضها. لو لسه، بنعرض أصفار
   const displayStats = stats || {
     totalSales: 0,
     totalOrders: 0,
@@ -74,8 +67,7 @@ export default function AdminDashboard() {
           <div className="flex justify-between items-start mb-4">
             <div>
               <p className="text-sm font-bold text-green-100 mb-1">إجمالي المبيعات</p>
-              {/* ✅ هنا بنعرض إجمالي المبيعات من الباك إند */}
-              <h3 className="text-3xl font-bold">{displayStats.totalSales?.toLocaleString()} ج.م</h3>
+              <h3 className="text-3xl font-bold">{displayStats.totalSales?.toLocaleString() || 0} ج.م</h3>
             </div>
             <span className="text-3xl bg-white/20 p-2 rounded-xl">💰</span>
           </div>
@@ -89,8 +81,7 @@ export default function AdminDashboard() {
           <div className="flex justify-between items-start mb-4 relative z-10">
             <div>
               <p className="text-sm font-bold text-gray-500 mb-1">إجمالي الطلبات</p>
-              {/* ✅ هنا بنعرض إجمالي الطلبات */}
-              <h3 className="text-3xl font-bold text-gray-800">{displayStats.totalOrders}</h3>
+              <h3 className="text-3xl font-bold text-gray-800">{displayStats.totalOrders || 0}</h3>
             </div>
             <span className="text-3xl bg-gray-100 p-2 rounded-xl">🛒</span>
           </div>
@@ -105,8 +96,7 @@ export default function AdminDashboard() {
           <div className="flex justify-between items-start mb-4 relative z-10">
             <div>
               <p className="text-sm font-bold text-gray-500 mb-1">العملاء</p>
-              {/* ✅ هنا بنعرض عدد العملاء */}
-              <h3 className="text-3xl font-bold text-gray-800">{displayStats.totalCustomers}</h3>
+              <h3 className="text-3xl font-bold text-gray-800">{displayStats.totalCustomers || 0}</h3>
             </div>
             <span className="text-3xl bg-purple-50 text-purple-600 p-2 rounded-xl">👥</span>
           </div>
@@ -121,8 +111,7 @@ export default function AdminDashboard() {
           <div className="flex justify-between items-start mb-4 relative z-10">
             <div>
               <p className="text-sm font-bold text-gray-500 mb-1">المنتجات</p>
-              {/* ✅ هنا بنعرض عدد المنتجات */}
-              <h3 className="text-3xl font-bold text-gray-800">{displayStats.totalProducts}</h3>
+              <h3 className="text-3xl font-bold text-gray-800">{displayStats.totalProducts || 0}</h3>
             </div>
             <span className="text-3xl bg-blue-50 text-blue-600 p-2 rounded-xl">📦</span>
           </div>
@@ -133,7 +122,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Charts & Best Sellers */}
+      {/* Charts & Top Products */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Sales Chart */}
@@ -150,24 +139,32 @@ export default function AdminDashboard() {
           </div>
           
           <div className="h-64 w-full relative">
-            <svg viewBox="0 0 500 200" className="w-full h-full" preserveAspectRatio="none">
-              <line x1="0" y1="50" x2="500" y2="50" stroke="#f3f4f6" strokeWidth="1" />
-              <line x1="0" y1="100" x2="500" y2="100" stroke="#f3f4f6" strokeWidth="1" />
-              <line x1="0" y1="150" x2="500" y2="150" stroke="#f3f4f6" strokeWidth="1" />
-              
-              <defs>
-                <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#15803d" stopOpacity="0.2" />
-                  <stop offset="100%" stopColor="#15803d" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              
-              <path d="M0,150 C50,120 100,130 150,80 C200,30 250,80 300,110 C350,140 400,120 450,170 L500,160 L500,200 L0,200 Z" fill="url(#chartGradient)" />
-              <path d="M0,150 C50,120 100,130 150,80 C200,30 250,80 300,110 C350,140 400,120 450,170 L500,160" fill="none" stroke="#15803d" strokeWidth="3" strokeLinecap="round" />
-              <circle cx="150" cy="80" r="5" fill="#15803d" stroke="#fff" strokeWidth="2" />
-              <circle cx="300" cy="110" r="5" fill="#15803d" stroke="#fff" strokeWidth="2" />
-              <circle cx="450" cy="170" r="5" fill="#15803d" stroke="#fff" strokeWidth="2" />
-            </svg>
+            {/* لو الـ Stats فيها بيانات Chart، بنرسمها. غير كده بنرسم شكل افتراضي */}
+            {displayStats.salesChart && displayStats.salesChart.length > 0 ? (
+              // ممكن نستخدم مكتبة زي recharts هنا لو حبيت
+              <div className="flex items-center justify-center h-full text-gray-400 font-bold">
+                (الرسم البياني هيظهر هنا باستخدام recharts)
+              </div>
+            ) : (
+              <svg viewBox="0 0 500 200" className="w-full h-full" preserveAspectRatio="none">
+                <line x1="0" y1="50" x2="500" y2="50" stroke="#f3f4f6" strokeWidth="1" />
+                <line x1="0" y1="100" x2="500" y2="100" stroke="#f3f4f6" strokeWidth="1" />
+                <line x1="0" y1="150" x2="500" y2="150" stroke="#f3f4f6" strokeWidth="1" />
+                
+                <defs>
+                  <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#15803d" stopOpacity="0.2" />
+                    <stop offset="100%" stopColor="#15803d" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                
+                <path d="M0,150 C50,120 100,130 150,80 C200,30 250,80 300,110 C350,140 400,120 450,170 L500,160 L500,200 L0,200 Z" fill="url(#chartGradient)" />
+                <path d="M0,150 C50,120 100,130 150,80 C200,30 250,80 300,110 C350,140 400,120 450,170 L500,160" fill="none" stroke="#15803d" strokeWidth="3" strokeLinecap="round" />
+                <circle cx="150" cy="80" r="5" fill="#15803d" stroke="#fff" strokeWidth="2" />
+                <circle cx="300" cy="110" r="5" fill="#15803d" stroke="#fff" strokeWidth="2" />
+                <circle cx="450" cy="170" r="5" fill="#15803d" stroke="#fff" strokeWidth="2" />
+              </svg>
+            )}
             
             <div className="flex justify-between mt-2 text-xs text-gray-400 font-bold">
               <span>11-19</span>
@@ -181,7 +178,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Best Sellers */}
+        {/* Top Products */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
@@ -190,9 +187,10 @@ export default function AdminDashboard() {
           </div>
 
           <div className="space-y-4 flex-1 overflow-y-auto no-scrollbar">
-            {bestSellers.length > 0 ? (
-              bestSellers.map((item, index) => (
-                <div key={item.id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-xl transition">
+            {/* بنعرض المنتجات من الـ stats.topProducts اللي جاية من الباك إند */}
+            {displayStats.topProducts && displayStats.topProducts.length > 0 ? (
+              displayStats.topProducts.map((item, index) => (
+                <div key={item.productId} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-xl transition">
                   <div className="flex items-center gap-3">
                     <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
                       index === 0 ? 'bg-green-100 text-green-700' : 
@@ -201,13 +199,12 @@ export default function AdminDashboard() {
                     }`}>
                       {index + 1}
                     </span>
-                    <img src={item.mainImageUrl || 'https://via.placeholder.com/50'} alt={item.nameAr} className="w-10 h-10 rounded-lg object-cover bg-gray-100" />
                     <div>
                       <h4 className="text-sm font-bold text-gray-800">{item.nameAr}</h4>
-                      <p className="text-xs text-gray-500">تم بيع {item.totalSold || item.quantity} قطعة</p>
+                      <p className="text-xs text-gray-500">تم بيع {item.soldCount || 0} قطعة</p>
                     </div>
                   </div>
-                  <span className="text-sm font-bold text-[#15803d]">{item.totalRevenue?.toLocaleString() || item.total?.toLocaleString()} ج.م</span>
+                  <span className="text-sm font-bold text-[#15803d]">{item.totalRevenue?.toLocaleString() || 0} ج.م</span>
                 </div>
               ))
             ) : (
