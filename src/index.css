@@ -10,16 +10,14 @@
 @layer base {
   html {
     scroll-behavior: smooth;
-    /* منع الـ zoom التلقائي في iOS */
     -webkit-text-size-adjust: 100%;
   }
 
   body {
     font-family: 'Cairo', sans-serif;
     direction: rtl;
-    background-color: #fbfaf7;
+    background-color: #f8fafc; /* لون خلفية أهدى شوية */
     color: #121a15;
-    /* منع السكرول الأفقي في الموبايل */
     overflow-x: hidden;
   }
 
@@ -35,13 +33,12 @@
 @layer components {
   /* ---------- Buttons ---------- */
   .btn-primary {
-    @apply bg-brand-main text-white px-4 py-2.5 rounded-xl font-bold hover:bg-brand-dark transition-all 
-           /* Mobile: Full width, Desktop: Auto width */
+    @apply bg-[#15803d] text-white px-4 py-2.5 rounded-xl font-bold hover:bg-[#0a2e1f] transition-all 
            w-full sm:w-auto text-sm sm:text-base flex items-center justify-center gap-2;
   }
   
   .btn-outline {
-    @apply border-2 border-brand-main text-brand-main px-4 py-2.5 rounded-xl font-bold hover:bg-brand-main hover:text-white transition-all
+    @apply border-2 border-[#15803d] text-[#15803d] px-4 py-2.5 rounded-xl font-bold hover:bg-[#15803d] hover:text-white transition-all
            w-full sm:w-auto text-sm sm:text-base flex items-center justify-center gap-2;
   }
 
@@ -53,9 +50,8 @@
   /* ---------- Forms & Inputs ---------- */
   .input-field {
     @apply w-full px-4 py-2.5 border border-gray-300 rounded-xl 
-           focus:outline-none focus:ring-2 focus:ring-brand-light 
-           /* text-base مهم جداً عشان الـ iOS ميعملش zoom */
-           text-base bg-white;
+           focus:outline-none focus:ring-2 focus:ring-[#15803d] focus:border-transparent
+           text-base bg-white transition-shadow;
   }
 
   .form-label {
@@ -64,17 +60,16 @@
 
   /* ---------- Cards ---------- */
   .card {
-    @apply bg-white rounded-2xl shadow-sm p-4 sm:p-6;
+    @apply bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-100;
   }
 
   /* ---------- Table Responsive ---------- */
-  /* استخدم الكلاس ده حوالين أي table عشان يشتغل على الموبايل */
   .table-responsive {
-    @apply w-full overflow-x-auto rounded-2xl bg-white shadow-sm;
+    @apply w-full overflow-x-auto rounded-2xl bg-white shadow-sm border border-gray-100;
   }
   
   .table-responsive table {
-    @apply w-full min-w-[700px]; /* يضمن إن الجدول مش هيتكسر */
+    @apply w-full min-w-[700px];
   }
 
   /* ---------- Page Container ---------- */
@@ -87,7 +82,7 @@
    Utilities & Media Queries
    ========================================= */
 @layer utilities {
-  /* إخفاء شريط التمرير (Scrollbar) */
+  /* إخفاء شريط التمرير */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -95,18 +90,32 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* شريط تمرير مخصص (أحلى من الافتراضي) */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 8px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 8px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
 }
 
 /* =========================================
    Mobile Specific Adjustments
    ========================================= */
 @media (max-width: 640px) {
-  /* تصغير العناوين الكبيرة في الموبايل */
   h1 { @apply text-2xl; }
   h2 { @apply text-xl; }
   h3 { @apply text-lg; }
 
-  /* تصغير الـ Padding في المودال */
   .modal-content {
     @apply p-4;
   }

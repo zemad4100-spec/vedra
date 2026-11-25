@@ -4,18 +4,15 @@ import { useState, useEffect } from 'react';
 export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  // بنبدأ بقفل القائمة في الموبايل، وفتحها في الشاشات الكبيرة
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 1024);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-  // تأثير عشان نقفل القائمة أوتوماتيك لما المستخدم يغير الصفحة (في الموبايل)
   useEffect(() => {
     if (window.innerWidth < 1024) {
       setSidebarOpen(false);
     }
   }, [location.pathname]);
 
-  // تأثير عشان نظبط حالة القائمة لو المستخدم عمل Resize للشاشة
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
@@ -34,23 +31,23 @@ export default function AdminLayout() {
   };
 
   const menuItems = [
-    { path: '/admin', label: '📊 لوحة التحكم', exact: true },
-    { path: '/admin/pos', label: '💳 نقطة البيع (POS)' },
-    { path: '/admin/purchase-invoices', label: '🛍️ فواتير الشراء' },
-    { path: '/admin/orders', label: '📋 الطلبات' },
-    { path: '/admin/products', label: '📦 المنتجات' },
-    { path: '/admin/suppliers', label: '🚚 الموردين' },
-    { path: '/admin/customers', label: '👤 العملاء' },
-    { path: '/admin/inventory', label: '📦 المخزن' },
-    { path: '/admin/expenses', label: '💰 المصروفات' },
-    { path: '/admin/reports', label: '📈 التقارير' },
-    { path: '/admin/users', label: '👥 المستخدمين' },
+    { path: '/admin', label: 'لوحة التحكم', icon: '🏠', exact: true },
+    { path: '/admin/pos', label: 'نقطة البيع (POS)', icon: '🛒' },
+    { path: '/admin/purchase-invoices', label: 'فواتير الشراء', icon: '🛍️' },
+    { path: '/admin/orders', label: 'الطلبات', icon: '📋' },
+    { path: '/admin/products', label: 'المنتجات', icon: '📦' },
+    { path: '/admin/suppliers', label: 'الموردين', icon: '🚚' },
+    { path: '/admin/customers', label: 'العملاء', icon: '👥' },
+    { path: '/admin/inventory', label: 'المخزن', icon: '🏠' },
+    { path: '/admin/expenses', label: 'المصروفات', icon: '💰' },
+    { path: '/admin/reports', label: 'التقارير', icon: '📊' },
+    { path: '/admin/users', label: 'المستخدمين', icon: '👥' },
   ];
 
   return (
-    <div className="min-h-screen flex bg-gray-100 overflow-hidden relative">
+    <div className="min-h-screen flex bg-[#f4f7f6] overflow-hidden relative" dir="rtl">
       
-      {/* Overlay: خلفية سوداء شفافة تظهر في الموبايل لما القائمة تكون مفتوحة */}
+      {/* Overlay */}
       {sidebarOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
@@ -60,27 +57,21 @@ export default function AdminLayout() {
 
       {/* Sidebar */}
       <aside 
-        className={`bg-brand-dark text-white transition-all duration-300 flex flex-col z-50 fixed lg:static inset-y-0 right-0
+        className={`bg-[#0a2e1f] text-white transition-all duration-300 flex flex-col z-50 fixed lg:static inset-y-0 right-0
           ${sidebarOpen ? 'translate-x-0 w-64' : 'translate-x-full lg:translate-x-0 lg:w-20'}
         `}
       >
-        <div className="p-6 border-b border-gray-700 flex items-center justify-between lg:justify-start gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-brand-sand text-brand-dark rounded-xl flex items-center justify-center text-xl font-serif shrink-0">❧</div>
-            {sidebarOpen && (
-              <div className="whitespace-nowrap">
-                <h1 className="text-lg font-bold">Vedra</h1>
-                <p className="text-[10px] text-gray-400 tracking-widest">ERP SYSTEM</p>
-              </div>
-            )}
+        {/* Logo Section */}
+        <div className="p-6 flex flex-col items-center justify-center border-b border-[#1a4a34]">
+          <div className="flex items-center gap-2 mb-2">
+            <h1 className="text-3xl font-bold text-white tracking-wide">Vedra</h1>
+            <span className="text-2xl text-[#4ade80]">🌿</span>
           </div>
-          {/* زرار قفل القائمة يظهر بس في الموبايل */}
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-400 hover:text-white text-2xl">
-            ✕
-          </button>
+          <p className="text-[10px] text-[#4ade80] tracking-widest font-bold">ERP SYSTEM</p>
         </div>
 
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto no-scrollbar">
+        {/* Menu */}
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto no-scrollbar mt-2">
           {menuItems.map(item => {
             const isActive = item.exact
               ? location.pathname === item.path
@@ -89,45 +80,72 @@ export default function AdminLayout() {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition ${
-                  isActive ? 'bg-brand-main text-white' : 'text-gray-300 hover:bg-gray-800'
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                  isActive 
+                    ? 'bg-[#15803d] text-white shadow-md' 
+                    : 'text-gray-300 hover:bg-[#15803d]/50 hover:text-white'
                 }`}
-                title={!sidebarOpen ? item.label.substring(2) : ''} // tooltip للشاشات الكبيرة
               >
-                <span className="text-xl shrink-0">{item.label.split(' ')[0]}</span>
-                {sidebarOpen && <span className="font-bold text-sm whitespace-nowrap">{item.label.substring(2)}</span>}
+                <span className="text-xl shrink-0">{item.icon}</span>
+                {sidebarOpen && <span className="font-bold text-sm whitespace-nowrap">{item.label}</span>}
               </Link>
             );
           })}
         </nav>
 
-        <div className="p-3 border-t border-gray-700 space-y-2 shrink-0">
-          <Link to="/" className="block bg-brand-sand text-brand-dark text-center py-2 rounded-xl font-bold text-sm hover:bg-white transition whitespace-nowrap">
-            {sidebarOpen ? '🌐 عرض المتجر' : '🌐'}
-          </Link>
-          <button onClick={logout} className="w-full bg-red-600/20 text-red-400 py-2 rounded-xl font-bold text-sm hover:bg-red-600 hover:text-white transition flex items-center justify-center gap-2 whitespace-nowrap">
-            {sidebarOpen ? '🚪 تسجيل الخروج' : '🚪'}
+        {/* Bottom Actions */}
+        <div className="p-4 border-t border-[#1a4a34] space-y-3 shrink-0">
+          <div className="bg-[#0f3d29] rounded-xl p-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">🎧</span>
+              <div>
+                <p className="text-xs text-gray-300 font-bold">دعم فني</p>
+                <p className="text-sm font-bold text-[#4ade80]">24/7</p>
+              </div>
+            </div>
+          </div>
+          
+          <button onClick={logout} className="w-full bg-[#7f1d1d] text-white py-3 rounded-xl font-bold text-sm hover:bg-red-800 transition flex items-center justify-center gap-2 whitespace-nowrap">
+            {sidebarOpen ? 'تسجيل الخروج' : '🚪'}
+            {sidebarOpen && <span>🚪</span>}
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        <header className="bg-white shadow-sm p-4 flex justify-between items-center shrink-0">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-2xl text-gray-700 hover:text-brand-main transition">
+        {/* Header */}
+        <header className="bg-white shadow-sm p-4 flex justify-between items-center shrink-0 border-b border-gray-100">
+          <div className="flex items-center gap-4">
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-2xl text-gray-700 hover:text-[#15803d] transition">
               ☰
             </button>
-            {/* عنوان الصفحة الحالية في الموبايل (اختياري) */}
-            <span className="text-sm font-bold text-gray-500 lg:hidden">
-              {menuItems.find(item => item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path))?.label.substring(2) || 'لوحة التحكم'}
-            </span>
+            
+            {/* Search Bar */}
+            <div className="hidden md:flex items-center bg-gray-100 rounded-full px-4 py-2 w-96">
+              <span className="text-gray-400 ml-2">🔍</span>
+              <input 
+                type="text" 
+                placeholder="ابحث في النظام..." 
+                className="bg-transparent border-none outline-none w-full text-sm text-gray-700 placeholder-gray-400"
+              />
+            </div>
           </div>
           
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-bold hidden sm:block">👤 {user.fullName || 'Admin'}</span>
-            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-brand-main text-white rounded-full flex items-center justify-center font-bold shrink-0">
-              {(user.fullName || 'A')[0]}
+          <div className="flex items-center gap-4">
+            <button className="relative text-2xl text-gray-600 hover:text-[#15803d] transition">
+              🔔
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">3</span>
+            </button>
+            
+            <div className="flex items-center gap-2 border-r border-gray-200 pr-4">
+              <div className="text-left hidden sm:block">
+                <p className="text-sm font-bold text-gray-800">{user.fullName || 'Admin'}</p>
+                <p className="text-xs text-gray-500">مدير النظام</p>
+              </div>
+              <div className="w-10 h-10 bg-[#15803d] text-white rounded-full flex items-center justify-center font-bold text-lg shadow-sm">
+                {(user.fullName || 'A')[0]}
+              </div>
             </div>
           </div>
         </header>
