@@ -8,18 +8,13 @@ export default function AdminLayout() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   useEffect(() => {
-    if (window.innerWidth < 1024) {
-      setSidebarOpen(false);
-    }
+    if (window.innerWidth < 1024) setSidebarOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setSidebarOpen(true);
-      } else {
-        setSidebarOpen(false);
-      }
+      if (window.innerWidth >= 1024) setSidebarOpen(true);
+      else setSidebarOpen(false);
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -47,21 +42,12 @@ export default function AdminLayout() {
   return (
     <div className="min-h-screen flex bg-[#f4f7f6] overflow-hidden relative" dir="rtl">
       
-      {/* Overlay */}
       {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Sidebar */}
-      <aside 
-        className={`bg-[#0a2e1f] text-white transition-all duration-300 flex flex-col z-50 fixed lg:static inset-y-0 right-0
-          ${sidebarOpen ? 'translate-x-0 w-64' : 'translate-x-full lg:translate-x-0 lg:w-20'}
-        `}
-      >
-        {/* Logo Section */}
+      <aside className={`bg-[#0a2e1f] text-white transition-all duration-300 flex flex-col z-50 fixed lg:static inset-y-0 right-0 ${sidebarOpen ? 'translate-x-0 w-64' : 'translate-x-full lg:translate-x-0 lg:w-20'}`}>
+        
         <div className="p-6 flex flex-col items-center justify-center border-b border-[#1a4a34]">
           <div className="flex items-center gap-2 mb-2">
             <h1 className="text-3xl font-bold text-white tracking-wide">Vedra</h1>
@@ -70,22 +56,11 @@ export default function AdminLayout() {
           <p className="text-[10px] text-[#4ade80] tracking-widest font-bold">ERP SYSTEM</p>
         </div>
 
-        {/* Menu */}
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto no-scrollbar mt-2">
           {menuItems.map(item => {
-            const isActive = item.exact
-              ? location.pathname === item.path
-              : location.pathname.startsWith(item.path);
+            const isActive = item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
             return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                  isActive 
-                    ? 'bg-[#15803d] text-white shadow-md' 
-                    : 'text-gray-300 hover:bg-[#15803d]/50 hover:text-white'
-                }`}
-              >
+              <Link key={item.path} to={item.path} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive ? 'bg-[#15803d] text-white shadow-md' : 'text-gray-300 hover:bg-[#15803d]/50 hover:text-white'}`}>
                 <span className="text-xl shrink-0">{item.icon}</span>
                 {sidebarOpen && <span className="font-bold text-sm whitespace-nowrap">{item.label}</span>}
               </Link>
@@ -93,7 +68,6 @@ export default function AdminLayout() {
           })}
         </nav>
 
-        {/* Bottom Actions */}
         <div className="p-4 border-t border-[#1a4a34] space-y-3 shrink-0">
           <div className="bg-[#0f3d29] rounded-xl p-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -112,33 +86,34 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        {/* Header */}
         <header className="bg-white shadow-sm p-4 flex justify-between items-center shrink-0 border-b border-gray-100">
           <div className="flex items-center gap-4">
             <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-2xl text-gray-700 hover:text-[#15803d] transition">
               ☰
             </button>
             
-            {/* Search Bar */}
             <div className="hidden md:flex items-center bg-gray-100 rounded-full px-4 py-2 w-96">
               <span className="text-gray-400 ml-2">🔍</span>
-              <input 
-                type="text" 
-                placeholder="ابحث في النظام..." 
-                className="bg-transparent border-none outline-none w-full text-sm text-gray-700 placeholder-gray-400"
-              />
+              <input type="text" placeholder="ابحث في النظام..." className="bg-transparent border-none outline-none w-full text-sm text-gray-700 placeholder-gray-400" />
             </div>
           </div>
           
-          <div className="flex items-center gap-4">
-            <button className="relative text-2xl text-gray-600 hover:text-[#15803d] transition">
+          <div className="flex items-center gap-3 md:gap-4">
+            
+            {/* ✅ 1. زرار المتجر */}
+            <Link to="/" className="flex items-center gap-2 bg-[#f0fdf4] text-[#15803d] px-3 py-2 rounded-xl font-bold text-sm hover:bg-[#15803d] hover:text-white transition">
+              <span>🌐</span>
+              <span className="hidden md:block">المتجر</span>
+            </Link>
+
+            {/* ✅ 2. زرار الجرس (يوجه للطلبات) */}
+            <Link to="/admin/orders" className="relative text-2xl text-gray-600 hover:text-[#15803d] transition">
               🔔
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">3</span>
-            </button>
+            </Link>
             
-            <div className="flex items-center gap-2 border-r border-gray-200 pr-4">
+            <div className="flex items-center gap-2 border-r border-gray-200 pr-2 md:pr-4">
               <div className="text-left hidden sm:block">
                 <p className="text-sm font-bold text-gray-800">{user.fullName || 'Admin'}</p>
                 <p className="text-xs text-gray-500">مدير النظام</p>
