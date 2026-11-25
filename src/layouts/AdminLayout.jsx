@@ -1,11 +1,34 @@
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import api from '../services/api'; // ✅ استيراد api
 
 export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 1024);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+  
+  // ✅ حالة عشان نحفظ عدد الطلبات الجديدة
+  const [newOrdersCount, setNewOrdersCount] = useState(0);
+
+  // ✅ بنجيب عدد الطلبات الجديدة لما الصفحة تفتح
+  useEffect(() => {
+    const fetchNewOrders = async () => {
+      try {
+        const res = await api.get('/admin/orders?status=New');
+        if (res.data.success) {
+          setNewOrdersCount(res.data.data.length);
+        }
+      } catch (err) {
+        console.error('Error fetching new orders:', err);
+      }
+    };
+    fetchNewOrders();
+    
+    // اختياري: ممكن نعمل Polling كل دقيقة عشان نحدث العدد
+    const interval = setInterval(fetchNewOrders, 60000); // كل 60 ثانية
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (window.innerWidth < 1024) setSidebarOpen(false);
@@ -101,16 +124,19 @@ export default function AdminLayout() {
           
           <div className="flex items-center gap-3 md:gap-4">
             
-            {/* ✅ 1. زرار المتجر */}
             <Link to="/" className="flex items-center gap-2 bg-[#f0fdf4] text-[#15803d] px-3 py-2 rounded-xl font-bold text-sm hover:bg-[#15803d] hover:text-white transition">
               <span>🌐</span>
               <span className="hidden md:block">المتجر</span>
             </Link>
 
-            {/* ✅ 2. زرار الجرس (يوجه للطلبات) */}
+            {/* ✅ زرار الجرس مع العدد الديناميكي */}
             <Link to="/admin/orders" className="relative text-2xl text-gray-600 hover:text-[#15803d] transition">
               🔔
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">3</span>
+              {newOrdersCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  {newOrdersCount > 9 ? '9+' : newOrdersCount}
+                </span>
+              )}
             </Link>
             
             <div className="flex items-center gap-2 border-r border-gray-200 pr-2 md:pr-4">
