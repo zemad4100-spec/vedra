@@ -10,13 +10,13 @@ export default function AdminLayout() {
   
   const [newOrdersCount, setNewOrdersCount] = useState(0);
 
-  // ✅ بنجيب عدد الطلبات الجديدة من الـ Endpoint الجديد
+  // ✅ بنجيب عدد الطلبات الجديدة
   useEffect(() => {
     const fetchNewOrders = async () => {
       try {
         const res = await api.get('/admin/orders/new-count');
         if (res.data.success) {
-          setNewOrdersCount(res.data.data); // الرقم بيجي في data
+          setNewOrdersCount(res.data.data);
         }
       } catch (err) {
         console.error('Error fetching new orders count:', err);
@@ -24,7 +24,6 @@ export default function AdminLayout() {
     };
     fetchNewOrders();
     
-    // بنحدث العدد كل دقيقة (اختياري)
     const interval = setInterval(fetchNewOrders, 60000);
     return () => clearInterval(interval);
   }, []);
