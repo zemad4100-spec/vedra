@@ -1,6 +1,6 @@
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import api from '../services/api'; // ✅ استيراد api
+import api from '../services/api';
 
 export default function AdminLayout() {
   const navigate = useNavigate();
@@ -8,25 +8,24 @@ export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 1024);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   
-  // ✅ حالة عشان نحفظ عدد الطلبات الجديدة
   const [newOrdersCount, setNewOrdersCount] = useState(0);
 
-  // ✅ بنجيب عدد الطلبات الجديدة لما الصفحة تفتح
+  // ✅ بنجيب عدد الطلبات الجديدة من الـ Endpoint الجديد
   useEffect(() => {
     const fetchNewOrders = async () => {
       try {
-        const res = await api.get('/admin/orders?status=New');
+        const res = await api.get('/admin/orders/new-count');
         if (res.data.success) {
-          setNewOrdersCount(res.data.data.length);
+          setNewOrdersCount(res.data.data); // الرقم بيجي في data
         }
       } catch (err) {
-        console.error('Error fetching new orders:', err);
+        console.error('Error fetching new orders count:', err);
       }
     };
     fetchNewOrders();
     
-    // اختياري: ممكن نعمل Polling كل دقيقة عشان نحدث العدد
-    const interval = setInterval(fetchNewOrders, 60000); // كل 60 ثانية
+    // بنحدث العدد كل دقيقة (اختياري)
+    const interval = setInterval(fetchNewOrders, 60000);
     return () => clearInterval(interval);
   }, []);
 
