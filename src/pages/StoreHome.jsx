@@ -158,7 +158,7 @@ export default function StoreHome() {
                   </div>
                   <div className="p-6">
                     <h3 className="font-serif font-bold text-lg text-brand-dark mb-2">{p.nameAr}</h3>
-                    <p className="text-sm text-gray-500 mb-4 line-clamp-2">{p.shortDescAr || 'نبات مميز من Vedra'}</p>
+                    <p className="text-sm text-gray-500 mb-4 line-clamp-2">{p.shortDescAr || 'نبات مميز من Verda'}</p>
                     <div className="flex justify-between items-center pt-4 border-t border-gray-100">
                       <span className="text-xl font-bold text-brand-main">
                         {p.effectivePrice?.toLocaleString()} ج.م

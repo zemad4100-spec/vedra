@@ -51,7 +51,7 @@ export default function StoreLayout() {
               ❧
             </div>
             <div>
-              <h1 className="text-2xl font-serif font-bold text-brand-dark">Vedra</h1>
+              <h1 className="text-2xl font-serif font-bold text-brand-dark">Verda</h1>
               <p className="text-[10px] text-gray-500 font-bold tracking-widest">
                 LANDSCAPE & GREEN SPACES
               </p>
@@ -108,7 +108,7 @@ export default function StoreLayout() {
               <div className="w-10 h-10 bg-brand-sand text-brand-dark rounded-xl flex items-center justify-center text-xl font-serif">
                 ❧
               </div>
-              <h3 className="text-xl font-serif font-bold text-white">Vedra</h3>
+              <h3 className="text-xl font-serif font-bold text-white">Verda</h3>
             </div>
             <p className="text-sm leading-loose">
               مساحتك الخضراء تبدأ من هنا. نباتات مختارة بعناية، وأفكار تلهمك تضيف لمسة طبيعية لكل مكان.
@@ -134,13 +134,13 @@ export default function StoreLayout() {
             <h4 className="text-lg font-bold text-white mb-4">تواصل معنا</h4>
             <ul className="space-y-2 text-sm">
               <li>📞 0100 000 0000</li>
-              <li>✉️ hello@vedra.example</li>
+              <li>✉️ hello@verda.example</li>
               <li>📍 القاهرة، مصر</li>
             </ul>
           </div>
         </div>
         <div className="border-t border-gray-700 mt-10 pt-6 text-center text-sm text-gray-500">
-          © {new Date().getFullYear()} Vedra — جميع الحقوق محفوظة
+          © {new Date().getFullYear()} Verda — جميع الحقوق محفوظة
         </div>
       </footer>
     </div>

@@ -112,7 +112,7 @@ export default function Cart() {
             تم إنشاء طلبك بنجاح!
           </h1>
           <p className="text-gray-500 mb-8">
-            شكراً لثقتك في Vedra 🌿 هيتم التواصل معاك لتأكيد التوصيل.
+            شكراً لثقتك في Verda 🌿 هيتم التواصل معاك لتأكيد التوصيل.
           </p>
 
           <div className="bg-gray-50 rounded-2xl p-6 mb-8 text-right">

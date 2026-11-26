@@ -46,7 +46,7 @@ export default function AdminPurchaseInvoiceDetails() {
                 ❧
               </div>
               <div>
-                <h1 className="text-3xl font-serif font-bold text-brand-dark">Vedra</h1>
+                <h1 className="text-3xl font-serif font-bold text-brand-dark">Verda</h1>
                 <p className="text-xs text-gray-500 tracking-widest font-bold">PURCHASE INVOICE</p>
               </div>
             </div>
@@ -132,7 +132,7 @@ export default function AdminPurchaseInvoiceDetails() {
         )}
 
         <div className="mt-12 pt-6 border-t border-gray-200 text-center text-sm text-gray-500">
-          <p>Vedra — نظام إدارة المشتريات</p>
+          <p>Verda — نظام إدارة المشتريات</p>
         </div>
       </div>
     </div>

@@ -78,7 +78,7 @@ export default function Login() {
           <div className="w-16 h-16 bg-brand-main text-brand-sand rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
             ❧
           </div>
-          <h1 className="text-2xl font-bold text-brand-dark">Vedra</h1>
+          <h1 className="text-2xl font-bold text-brand-dark">Verda</h1>
           <p className="text-xs text-gray-500 tracking-widest font-bold">LANDSCAPE & GREEN SPACES</p>
         </div>
 

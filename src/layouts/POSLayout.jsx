@@ -14,7 +14,7 @@ export default function POSLayout() {
       <header className="bg-brand-dark p-4 flex justify-between items-center">
         <div className="flex items-center gap-3">
           <span className="text-2xl">💳</span>
-          <h1 className="text-lg font-bold">Vedra POS - نقطة البيع</h1>
+          <h1 className="text-lg font-bold">Verda POS - نقطة البيع</h1>
         </div>
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-300">👤 {user.fullName || 'Cashier'}</span>

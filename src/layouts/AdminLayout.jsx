@@ -71,7 +71,7 @@ export default function AdminLayout() {
         
         <div className="p-6 flex flex-col items-center justify-center border-b border-[#1a4a34]">
           <div className="flex items-center gap-2 mb-2">
-            <h1 className="text-3xl font-bold text-white tracking-wide">Vedra</h1>
+            <h1 className="text-3xl font-bold text-white tracking-wide">Verda</h1>
             <span className="text-2xl text-[#4ade80]">🌿</span>
           </div>
           <p className="text-[10px] text-[#4ade80] tracking-widest font-bold">ERP SYSTEM</p>

@@ -90,7 +90,7 @@ export default function AdminDashboard() {
 
           <div className="text-center md:text-right">
             <h1 className="text-3xl md:text-4xl font-bold mb-2">
-              مرحباً بك في نظام Vedra
+              مرحباً بك في نظام Verda
             </h1>
 
             <p className="text-lg text-gray-200">

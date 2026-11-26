@@ -68,7 +68,7 @@ export default function ProductDetails() {
           </div>
 
           <p className="text-gray-600 leading-loose mb-6">
-            {product.descriptionAr || product.shortDescAr || 'نبات مميز من Vedra'}
+            {product.descriptionAr || product.shortDescAr || 'نبات مميز من Verda'}
           </p>
 
           <div className="bg-brand-cream rounded-2xl p-6 mb-6">

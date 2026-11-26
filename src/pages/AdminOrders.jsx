@@ -9,8 +9,12 @@ export default function AdminOrders() {
   const [designRequests, setDesignRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(null);
+  
+  // ✅ حالات الفلترة والبحث
   const [filter, setFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  
   const [selectedDesign, setSelectedDesign] = useState(null);
 
   const loadData = async () => {
@@ -88,39 +92,58 @@ export default function AdminOrders() {
   allItems.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   let filteredItems = allItems;
-  if (typeFilter === 'orders') {
-    filteredItems = filteredItems.filter(i => i._type === 'order');
-  } else if (typeFilter === 'designs') {
-    filteredItems = filteredItems.filter(i => i._type === 'design');
+
+  // ✅ فلترة النوع
+  if (typeFilter !== 'all') {
+    filteredItems = filteredItems.filter(i => i._type === typeFilter);
   }
 
-  if (filter === 'active') {
-    filteredItems = filteredItems.filter(i =>
-      !['Delivered', 'Cancelled', 'Returned', 'Rejected'].includes(i.status)
-    );
-  } else if (filter === 'delivered') {
-    filteredItems = filteredItems.filter(i => i.status === 'Delivered');
-  } else if (filter === 'cancelled') {
-    filteredItems = filteredItems.filter(i =>
-      ['Cancelled', 'Returned', 'Rejected'].includes(i.status)
+  // ✅ فلترة الحالة
+  if (filter !== 'all') {
+    if (filter === 'active') {
+      filteredItems = filteredItems.filter(i =>
+        !['Delivered', 'Cancelled', 'Returned', 'Rejected'].includes(i.status)
+      );
+    } else if (filter === 'delivered') {
+      filteredItems = filteredItems.filter(i => i.status === 'Delivered');
+    } else if (filter === 'cancelled') {
+      filteredItems = filteredItems.filter(i =>
+        ['Cancelled', 'Returned', 'Rejected'].includes(i.status)
+      );
+    } else if (filter === 'new') {
+      filteredItems = filteredItems.filter(i => i.status === 'New');
+    } else if (filter === 'preparing') {
+      filteredItems = filteredItems.filter(i => i.status === 'Preparing');
+    } else if (filter === 'outForDelivery') {
+      filteredItems = filteredItems.filter(i => i.status === 'OutForDelivery');
+    }
+  }
+
+  // ✅ فلترة البحث (بالاسم أو رقم الهاتف)
+  if (searchQuery) {
+    const query = searchQuery.toLowerCase();
+    filteredItems = filteredItems.filter(i => 
+      (i.fullName && i.fullName.toLowerCase().includes(query)) ||
+      (i.customerName && i.customerName.toLowerCase().includes(query)) ||
+      (i.phone && i.phone.includes(query)) ||
+      (i.customerPhone && i.customerPhone.includes(query)) ||
+      (i.orderNumber && i.orderNumber.toLowerCase().includes(query))
     );
   }
 
   const filterTabs = [
-    { key: 'all', label: 'الكل', count: allItems.length, icon: '📋' },
-    { key: 'active', label: 'النشطة', count: allItems.filter(i =>
-      !['Delivered', 'Cancelled', 'Returned', 'Rejected'].includes(i.status)
-    ).length, icon: '🟢' },
-    { key: 'delivered', label: 'المسلّمة', count: allItems.filter(i => i.status === 'Delivered').length, icon: '✅' },
-    { key: 'cancelled', label: 'الملغية', count: allItems.filter(i =>
-      ['Cancelled', 'Returned', 'Rejected'].includes(i.status)
-    ).length, icon: '❌' },
+    { key: 'all', label: 'الكل', icon: '📋', count: allItems.length },
+    { key: 'new', label: 'جديد', icon: '🆕', count: allItems.filter(i => i.status === 'New').length },
+    { key: 'preparing', label: 'قيد التجهيز', icon: '⏳', count: allItems.filter(i => i.status === 'Preparing').length },
+    { key: 'outForDelivery', label: 'خرج للتوصيل', icon: '🚚', count: allItems.filter(i => i.status === 'OutForDelivery').length },
+    { key: 'delivered', label: 'تم التسليم', icon: '✅', count: allItems.filter(i => i.status === 'Delivered').length },
+    { key: 'cancelled', label: 'ملغي / مرتجع', icon: '❌', count: allItems.filter(i => ['Cancelled', 'Returned', 'Rejected'].includes(i.status)).length },
   ];
 
   const typeTabs = [
-    { key: 'all', label: 'الكل', count: allItems.length, icon: '🎯' },
-    { key: 'orders', label: 'طلبات المنتجات', count: orders.length, icon: '📦' },
-    { key: 'designs', label: 'طلبات التصميم', count: designRequests.length, icon: '🏡' },
+    { key: 'all', label: 'الكل', icon: '🎯', count: allItems.length },
+    { key: 'order', label: 'طلبات المنتجات', icon: '📦', count: orders.length },
+    { key: 'design', label: 'طلبات التصميم', icon: '🏡', count: designRequests.length },
   ];
 
   if (loading) return <div className="text-center py-20 text-gray-500">جاري تحميل الطلبات...</div>;
@@ -137,8 +160,24 @@ export default function AdminOrders() {
           </div>
         </div>
 
-        {/* Filters Section */}
+        {/* Filters & Search Section */}
         <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 mb-6 space-y-4">
+          
+          {/* Search Bar */}
+          <div className="relative">
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+            <input
+              type="text"
+              placeholder="ابحث برقم الطلب، اسم العميل، أو رقم الهاتف..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full p-3.5 pr-12 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-[#15803d] focus:border-transparent outline-none transition-all"
+            />
+          </div>
+
+          <div className="h-px bg-gray-100 w-full"></div>
+
+          {/* Type Filters */}
           <div className="flex flex-wrap gap-2">
             {typeTabs.map(tab => (
               <button
@@ -158,8 +197,7 @@ export default function AdminOrders() {
             ))}
           </div>
 
-          <div className="h-px bg-gray-100 w-full"></div>
-
+          {/* Status Filters */}
           <div className="flex flex-wrap gap-2">
             {filterTabs.map(tab => (
               <button
@@ -189,7 +227,7 @@ export default function AdminOrders() {
                   <th className="p-4 text-right text-xs font-bold text-gray-500">النوع</th>
                   <th className="p-4 text-right text-xs font-bold text-gray-500">الرقم</th>
                   <th className="p-4 text-right text-xs font-bold text-gray-500">العميل</th>
-                  <th className="p-4 text-right text-xs font-bold text-gray-500">الإجمالي</th>
+                  <th className="p-4 text-right text-xs font-bold text-gray-500">الإجمالي / المساحة</th>
                   <th className="p-4 text-center text-xs font-bold text-gray-500">الحالة</th>
                   <th className="p-4 text-right text-xs font-bold text-gray-500">التاريخ</th>
                   <th className="p-4 text-center text-xs font-bold text-gray-500">الإجراءات</th>
@@ -304,7 +342,7 @@ export default function AdminOrders() {
                   <tr>
                     <td colSpan="7" className="p-10 text-center text-gray-400">
                       <span className="text-4xl block mb-2 opacity-30">📋</span>
-                      لا توجد طلبات في هذه الفئة
+                      لا توجد طلبات تطابق البحث أو الفلتر الحالي
                     </td>
                   </tr>
                 )}

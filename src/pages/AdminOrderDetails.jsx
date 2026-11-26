@@ -50,13 +50,13 @@ export default function AdminOrderDetails() {
                 ❧
               </div>
               <div>
-                <h1 className="text-3xl font-serif font-bold text-brand-dark">Vedra</h1>
+                <h1 className="text-3xl font-serif font-bold text-brand-dark">Verda</h1>
                 <p className="text-xs text-gray-500 tracking-widest font-bold">LANDSCAPE & GREEN SPACES</p>
               </div>
             </div>
             <p className="text-sm text-gray-500 mt-2">القاهرة، مصر</p>
             <p className="text-sm text-gray-500">📞 0100 000 0000</p>
-            <p className="text-sm text-gray-500">✉️ hello@vedra.example</p>
+            <p className="text-sm text-gray-500">✉️ hello@verda.example</p>
           </div>
           <div className="text-left">
             <h2 className="text-2xl font-bold text-brand-dark mb-2">فاتورة</h2>
@@ -133,7 +133,7 @@ export default function AdminOrderDetails() {
 
         {/* Footer */}
         <div className="mt-12 pt-6 border-t border-gray-200 text-center text-sm text-gray-500">
-          <p>شكراً لتعاملك مع Vedra 🌿</p>
+          <p>شكراً لتعاملك مع Verda 🌿</p>
           <p>هذه الفاتورة صادرة إلكترونياً ولا تحتاج لختم</p>
         </div>
       </div>
