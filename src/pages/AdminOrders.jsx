@@ -65,19 +65,19 @@ export default function AdminOrders() {
 
   const getStatusLabel = (status) => {
     const labels = {
-      New: { text: 'جديد', color: 'bg-blue-100 text-blue-700' },
-      Confirmed: { text: 'مؤكد', color: 'bg-green-100 text-green-700' },
-      Preparing: { text: 'قيد التجهيز', color: 'bg-yellow-100 text-yellow-700' },
-      OutForDelivery: { text: 'خرج للتوصيل', color: 'bg-purple-100 text-purple-700' },
-      Delivered: { text: 'تم التسليم', color: 'bg-emerald-100 text-emerald-700' },
-      Cancelled: { text: 'ملغي', color: 'bg-red-100 text-red-700' },
-      Returned: { text: 'مرتجع', color: 'bg-gray-100 text-gray-700' },
-      UnderReview: { text: 'قيد المراجعة', color: 'bg-yellow-100 text-yellow-700' },
-      QuoteSent: { text: 'تم إرسال عرض', color: 'bg-blue-100 text-blue-700' },
-      Accepted: { text: 'مقبول', color: 'bg-green-100 text-green-700' },
-      Rejected: { text: 'مرفوض', color: 'bg-red-100 text-red-700' },
+      New: { text: 'جديد', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+      Confirmed: { text: 'مؤكد', color: 'bg-green-100 text-green-700 border-green-200' },
+      Preparing: { text: 'قيد التجهيز', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
+      OutForDelivery: { text: 'خرج للتوصيل', color: 'bg-purple-100 text-purple-700 border-purple-200' },
+      Delivered: { text: 'تم التسليم', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
+      Cancelled: { text: 'ملغي', color: 'bg-red-100 text-red-700 border-red-200' },
+      Returned: { text: 'مرتجع', color: 'bg-gray-100 text-gray-700 border-gray-200' },
+      UnderReview: { text: 'قيد المراجعة', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
+      QuoteSent: { text: 'تم إرسال عرض', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+      Accepted: { text: 'مقبول', color: 'bg-green-100 text-green-700 border-green-200' },
+      Rejected: { text: 'مرفوض', color: 'bg-red-100 text-red-700 border-red-200' },
     };
-    return labels[status] || { text: status, color: 'bg-gray-100 text-gray-700' };
+    return labels[status] || { text: status, color: 'bg-gray-100 text-gray-700 border-gray-200' };
   };
 
   const allItems = [
@@ -107,254 +107,280 @@ export default function AdminOrders() {
   }
 
   const filterTabs = [
-    { key: 'all', label: '📋 الكل', count: allItems.length },
-    { key: 'active', label: '🟢 النشطة', count: allItems.filter(i =>
+    { key: 'all', label: 'الكل', count: allItems.length, icon: '📋' },
+    { key: 'active', label: 'النشطة', count: allItems.filter(i =>
       !['Delivered', 'Cancelled', 'Returned', 'Rejected'].includes(i.status)
-    ).length },
-    { key: 'delivered', label: '✅ المسلّمة', count: allItems.filter(i => i.status === 'Delivered').length },
-    { key: 'cancelled', label: '❌ الملغية', count: allItems.filter(i =>
+    ).length, icon: '🟢' },
+    { key: 'delivered', label: 'المسلّمة', count: allItems.filter(i => i.status === 'Delivered').length, icon: '✅' },
+    { key: 'cancelled', label: 'الملغية', count: allItems.filter(i =>
       ['Cancelled', 'Returned', 'Rejected'].includes(i.status)
-    ).length },
+    ).length, icon: '❌' },
   ];
 
   const typeTabs = [
-    { key: 'all', label: '🎯 الكل', count: allItems.length },
-    { key: 'orders', label: '📦 طلبات المنتجات', count: orders.length },
-    { key: 'designs', label: '🏡 طلبات التصميم', count: designRequests.length },
+    { key: 'all', label: 'الكل', count: allItems.length, icon: '🎯' },
+    { key: 'orders', label: 'طلبات المنتجات', count: orders.length, icon: '📦' },
+    { key: 'designs', label: 'طلبات التصميم', count: designRequests.length, icon: '🏡' },
   ];
 
-  if (loading) return <div className="text-center py-20">جاري التحميل...</div>;
+  if (loading) return <div className="text-center py-20 text-gray-500">جاري تحميل الطلبات...</div>;
 
   return (
-    <div>
-      <h1 className="text-2xl sm:text-3xl font-serif font-bold text-brand-dark mb-6">📋 الطلبات</h1>
-
-      {/* Tabs */}
-      <div className="mb-4 space-y-3">
-        <div className="flex flex-wrap gap-2">
-          {typeTabs.map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setTypeFilter(tab.key)}
-              className={`px-3 py-1.5 rounded-xl font-bold text-xs sm:text-sm transition ${
-                typeFilter === tab.key
-                  ? 'bg-brand-dark text-white'
-                  : 'bg-white text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              {tab.label} ({tab.count})
-            </button>
-          ))}
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {filterTabs.map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setFilter(tab.key)}
-              className={`px-3 py-1.5 rounded-xl font-bold text-xs sm:text-sm transition ${
-                filter === tab.key
-                  ? 'bg-brand-main text-white'
-                  : 'bg-white text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              {tab.label} ({tab.count})
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Table - Responsive as Cards on Mobile */}
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50 hidden md:table-header-group">
-            <tr>
-              <th className="p-4 text-right text-xs font-bold text-gray-500">النوع</th>
-              <th className="p-4 text-right text-xs font-bold text-gray-500">الرقم</th>
-              <th className="p-4 text-right text-xs font-bold text-gray-500">العميل</th>
-              <th className="p-4 text-right text-xs font-bold text-gray-500">الإجمالي / المساحة</th>
-              <th className="p-4 text-right text-xs font-bold text-gray-500">الحالة</th>
-              <th className="p-4 text-right text-xs font-bold text-gray-500">التاريخ</th>
-              <th className="p-4 text-right text-xs font-bold text-gray-500">إجراءات</th>
-            </tr>
-          </thead>
-          <tbody className="block md:table-row-group">
-            {filteredItems.map(item => {
-              const statusInfo = getStatusLabel(item.status);
-              const isDesign = item._type === 'design';
-
-              return (
-                <tr key={`${item._type}-${item.id}`} className={`border-t border-gray-100 hover:bg-gray-50 block md:table-row ${
-                  isDesign ? 'bg-purple-50/30' : ''
-                }`}>
-                  {/* النوع */}
-                  <td className="p-4 md:table-cell block text-right md:text-right border-b md:border-none">
-                    <span className="md:hidden font-bold text-gray-400 text-xs ml-2">النوع:</span>
-                    {isDesign ? (
-                      <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-lg text-xs font-bold">
-                        🏡 تصميم
-                      </span>
-                    ) : (
-                      <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-lg text-xs font-bold">
-                        📦 طلب
-                      </span>
-                    )}
-                  </td>
-                  
-                  {/* الرقم */}
-                  <td className="p-4 md:table-cell block text-right md:text-right border-b md:border-none">
-                    <span className="md:hidden font-bold text-gray-400 text-xs ml-2">الرقم:</span>
-                    <span className="font-bold text-sm">
-                      {isDesign ? `#${item.id}` : item.orderNumber}
-                    </span>
-                  </td>
-
-                  {/* العميل */}
-                  <td className="p-4 md:table-cell block text-right md:text-right border-b md:border-none">
-                    <span className="md:hidden font-bold text-gray-400 text-xs ml-2">العميل:</span>
-                    <span className="text-sm">{item.fullName || item.customerName}</span>
-                  </td>
-
-                  {/* الإجمالي / المساحة */}
-                  <td className="p-4 md:table-cell block text-right md:text-right border-b md:border-none">
-                    <span className="md:hidden font-bold text-gray-400 text-xs ml-2">الإجمالي:</span>
-                    {isDesign ? (
-                      <div>
-                        <p className="font-bold text-purple-700 text-sm">
-                          {item.spaceSqm ? `${item.spaceSqm} م²` : '-'}
-                        </p>
-                        {item.budget && (
-                          <p className="text-xs text-gray-500">ميزانية: {item.budget.toLocaleString()} ج.م</p>
-                        )}
-                      </div>
-                    ) : (
-                      <span className="font-bold text-brand-main text-sm">
-                        {item.grandTotal?.toLocaleString()} ج.م
-                      </span>
-                    )}
-                  </td>
-
-                  {/* الحالة */}
-                  <td className="p-4 md:table-cell block text-right md:text-right border-b md:border-none">
-                    <span className="md:hidden font-bold text-gray-400 text-xs ml-2">الحالة:</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${statusInfo.color}`}>
-                      {statusInfo.text}
-                    </span>
-                  </td>
-
-                  {/* التاريخ (تم إصلاحه) */}
-                  <td className="p-4 md:table-cell block text-right md:text-right border-b md:border-none">
-                    <span className="md:hidden font-bold text-gray-400 text-xs ml-2">التاريخ:</span>
-                    <span className="text-sm text-gray-500">
-                      {new Date(item.createdAt).toLocaleDateString('ar-EG', { 
-                        timeZone: 'Africa/Cairo',
-                        year: 'numeric', 
-                        month: 'numeric', 
-                        day: 'numeric' 
-                      })}
-                    </span>
-                  </td>
-
-                  {/* إجراءات */}
-                  <td className="p-4 md:table-cell block text-right md:text-right">
-                    <div className="flex flex-col md:flex-row gap-2 mt-2 md:mt-0">
-                      {isDesign ? (
-                        <>
-                          <button
-                            onClick={() => setSelectedDesign(item)}
-                            className="bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-purple-200"
-                          >
-                            👁️ تفاصيل
-                          </button>
-                          <select
-                            value={item.status}
-                            onChange={(e) => handleUpdateDesignStatus(item.id, e.target.value)}
-                            disabled={updating === `design-${item.id}`}
-                            className="text-xs border rounded-lg px-2 py-1.5 w-full md:w-auto"
-                          >
-                            <option value="New">جديد</option>
-                            <option value="UnderReview">قيد المراجعة</option>
-                            <option value="QuoteSent">تم إرسال عرض</option>
-                            <option value="Accepted">مقبول</option>
-                            <option value="Rejected">مرفوض</option>
-                          </select>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => navigate(`/admin/orders/${item.id}`)}
-                            className="bg-brand-main text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-brand-dark"
-                          >
-                            🧾 فاتورة
-                          </button>
-                          <select
-                            value={item.status}
-                            onChange={(e) => handleUpdateOrderStatus(item.id, e.target.value)}
-                            disabled={updating === `order-${item.id}`}
-                            className="text-xs border rounded-lg px-2 py-1.5 w-full md:w-auto"
-                          >
-                            <option value="New">جديد</option>
-                            <option value="Confirmed">مؤكد</option>
-                            <option value="Preparing">قيد التجهيز</option>
-                            <option value="OutForDelivery">خرج للتوصيل</option>
-                            <option value="Delivered">تم التسليم</option>
-                            <option value="Cancelled">ملغي</option>
-                          </select>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-            {filteredItems.length === 0 && (
-              <tr className="block md:table-row">
-                <td colSpan="7" className="p-8 text-center text-gray-500 block md:table-cell">
-                  لا توجد طلبات في هذه الفئة
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Modal تفاصيل التصميم */}
-      {selectedDesign && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl sm:text-2xl font-bold text-brand-dark">🏡 طلب تصميم #{selectedDesign.id}</h2>
-              <button onClick={() => setSelectedDesign(null)} className="text-2xl">✕</button>
-            </div>
-            
-            <div className="space-y-3 text-sm">
-              <div><strong>العميل:</strong> {selectedDesign.fullName}</div>
-              <div><strong>الهاتف:</strong> {selectedDesign.phone}</div>
-              {selectedDesign.location && <div><strong>العنوان:</strong> {selectedDesign.location}</div>}
-              <div><strong>نوع المساحة:</strong> {selectedDesign.requestType}</div>
-              {selectedDesign.spaceSqm && <div><strong>المساحة:</strong> {selectedDesign.spaceSqm} م²</div>}
-              {selectedDesign.budget && <div><strong>الميزانية:</strong> {selectedDesign.budget.toLocaleString()} ج.م</div>}
-              {selectedDesign.designStyle && <div><strong>نمط التصميم:</strong> {selectedDesign.designStyle}</div>}
-              {selectedDesign.notes && (
-                <div>
-                  <strong>ملاحظات:</strong>
-                  <p className="bg-gray-50 p-3 rounded-lg mt-1">{selectedDesign.notes}</p>
-                </div>
-              )}
-              <div className="pt-3 border-t">
-                <strong>الحالة:</strong> {getStatusLabel(selectedDesign.status).text}
-              </div>
-            </div>
-            
-            <button
-              onClick={() => setSelectedDesign(null)}
-              className="w-full btn-primary mt-6 py-3"
-            >
-              إغلاق
-            </button>
+    <div className="pb-10 bg-[#f4f7f6] min-h-screen -m-6 p-6">
+      <div className="max-w-7xl mx-auto">
+        
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#0a2e1f]">📋 الطلبات</h1>
+            <p className="text-gray-500 mt-1 text-sm">إدارة ومتابعة جميع الطلبات وطلبات التصميم</p>
           </div>
         </div>
-      )}
+
+        {/* Filters Section */}
+        <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 mb-6 space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {typeTabs.map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setTypeFilter(tab.key)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition ${
+                  typeFilter === tab.key
+                    ? 'bg-[#15803d] text-white shadow-md'
+                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <span>{tab.icon}</span> {tab.label}
+                <span className={`px-2 py-0.5 rounded-md text-xs ${typeFilter === tab.key ? 'bg-white/20' : 'bg-gray-200'}`}>
+                  {tab.count}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <div className="h-px bg-gray-100 w-full"></div>
+
+          <div className="flex flex-wrap gap-2">
+            {filterTabs.map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setFilter(tab.key)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition ${
+                  filter === tab.key
+                    ? 'bg-[#0a2e1f] text-white shadow-md'
+                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <span>{tab.icon}</span> {tab.label}
+                <span className={`px-2 py-0.5 rounded-md text-xs ${filter === tab.key ? 'bg-white/20' : 'bg-gray-200'}`}>
+                  {tab.count}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Orders Table */}
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[900px]">
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>
+                  <th className="p-4 text-right text-xs font-bold text-gray-500">النوع</th>
+                  <th className="p-4 text-right text-xs font-bold text-gray-500">الرقم</th>
+                  <th className="p-4 text-right text-xs font-bold text-gray-500">العميل</th>
+                  <th className="p-4 text-right text-xs font-bold text-gray-500">الإجمالي</th>
+                  <th className="p-4 text-center text-xs font-bold text-gray-500">الحالة</th>
+                  <th className="p-4 text-right text-xs font-bold text-gray-500">التاريخ</th>
+                  <th className="p-4 text-center text-xs font-bold text-gray-500">الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredItems.map(item => {
+                  const statusInfo = getStatusLabel(item.status);
+                  const isDesign = item._type === 'design';
+
+                  return (
+                    <tr key={`${item._type}-${item.id}`} className={`border-b border-gray-50 hover:bg-gray-50/50 transition ${isDesign ? 'bg-purple-50/20' : ''}`}>
+                      
+                      <td className="p-4">
+                        {isDesign ? (
+                          <span className="inline-flex items-center gap-1 bg-purple-100 text-purple-700 px-2.5 py-1 rounded-lg text-xs font-bold">
+                            🏡 تصميم
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-2.5 py-1 rounded-lg text-xs font-bold">
+                            📦 طلب
+                          </span>
+                        )}
+                      </td>
+                      
+                      <td className="p-4 font-bold text-sm text-[#0a2e1f]">
+                        {isDesign ? `#${item.id}` : item.orderNumber}
+                      </td>
+
+                      <td className="p-4">
+                        <p className="text-sm font-bold text-gray-800">{item.fullName || item.customerName}</p>
+                        <p className="text-xs text-gray-500">{item.phone || item.customerPhone}</p>
+                      </td>
+
+                      <td className="p-4">
+                        {isDesign ? (
+                          <div>
+                            <p className="font-bold text-purple-700 text-sm">{item.spaceSqm ? `${item.spaceSqm} م²` : '-'}</p>
+                            {item.budget && <p className="text-xs text-gray-500">ميزانية: {item.budget.toLocaleString()} ج.م</p>}
+                          </div>
+                        ) : (
+                          <span className="font-bold text-[#15803d] text-sm">{item.grandTotal?.toLocaleString()} ج.م</span>
+                        )}
+                      </td>
+
+                      <td className="p-4 text-center">
+                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold border ${statusInfo.color}`}>
+                          {statusInfo.text}
+                        </span>
+                      </td>
+
+                      <td className="p-4">
+                        <span className="text-sm text-gray-500">
+                          {new Date(item.createdAt).toLocaleDateString('ar-EG', { 
+                            timeZone: 'Africa/Cairo', year: 'numeric', month: 'short', day: 'numeric' 
+                          })}
+                        </span>
+                      </td>
+
+                      <td className="p-4">
+                        <div className="flex items-center justify-center gap-2">
+                          {isDesign ? (
+                            <>
+                              <button
+                                onClick={() => setSelectedDesign(item)}
+                                className="bg-purple-50 text-purple-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-purple-100 transition"
+                              >
+                                👁️ تفاصيل
+                              </button>
+                              <select
+                                value={item.status}
+                                onChange={(e) => handleUpdateDesignStatus(item.id, e.target.value)}
+                                disabled={updating === `design-${item.id}`}
+                                className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-purple-500 outline-none"
+                              >
+                                <option value="New">جديد</option>
+                                <option value="UnderReview">قيد المراجعة</option>
+                                <option value="QuoteSent">تم إرسال عرض</option>
+                                <option value="Accepted">مقبول</option>
+                                <option value="Rejected">مرفوض</option>
+                              </select>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => navigate(`/admin/orders/${item.id}`)}
+                                className="bg-[#15803d] text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-[#0a2e1f] transition shadow-sm"
+                              >
+                                🧾 فاتورة
+                              </button>
+                              <select
+                                value={item.status}
+                                onChange={(e) => handleUpdateOrderStatus(item.id, e.target.value)}
+                                disabled={updating === `order-${item.id}`}
+                                className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-[#15803d] outline-none"
+                              >
+                                <option value="New">جديد</option>
+                                <option value="Confirmed">مؤكد</option>
+                                <option value="Preparing">قيد التجهيز</option>
+                                <option value="OutForDelivery">خرج للتوصيل</option>
+                                <option value="Delivered">تم التسليم</option>
+                                <option value="Cancelled">ملغي</option>
+                              </select>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {filteredItems.length === 0 && (
+                  <tr>
+                    <td colSpan="7" className="p-10 text-center text-gray-400">
+                      <span className="text-4xl block mb-2 opacity-30">📋</span>
+                      لا توجد طلبات في هذه الفئة
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Modal تفاصيل التصميم */}
+        {selectedDesign && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-fade-in">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-[#0a2e1f] flex items-center gap-2">
+                  <span>🏡</span> طلب تصميم #{selectedDesign.id}
+                </h2>
+                <button onClick={() => setSelectedDesign(null)} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 transition">
+                  ✕
+                </button>
+              </div>
+              
+              <div className="space-y-4 text-sm bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                <div className="flex justify-between border-b border-gray-200 border-dashed pb-2">
+                  <span className="text-gray-500">العميل</span>
+                  <span className="font-bold text-[#0a2e1f]">{selectedDesign.fullName}</span>
+                </div>
+                <div className="flex justify-between border-b border-gray-200 border-dashed pb-2">
+                  <span className="text-gray-500">الهاتف</span>
+                  <span className="font-bold text-[#0a2e1f]">{selectedDesign.phone}</span>
+                </div>
+                {selectedDesign.location && (
+                  <div className="flex justify-between border-b border-gray-200 border-dashed pb-2">
+                    <span className="text-gray-500">العنوان</span>
+                    <span className="font-bold text-[#0a2e1f]">{selectedDesign.location}</span>
+                  </div>
+                )}
+                <div className="flex justify-between border-b border-gray-200 border-dashed pb-2">
+                  <span className="text-gray-500">نوع المساحة</span>
+                  <span className="font-bold text-[#0a2e1f]">{selectedDesign.requestType}</span>
+                </div>
+                {selectedDesign.spaceSqm && (
+                  <div className="flex justify-between border-b border-gray-200 border-dashed pb-2">
+                    <span className="text-gray-500">المساحة</span>
+                    <span className="font-bold text-[#0a2e1f]">{selectedDesign.spaceSqm} م²</span>
+                  </div>
+                )}
+                {selectedDesign.budget && (
+                  <div className="flex justify-between border-b border-gray-200 border-dashed pb-2">
+                    <span className="text-gray-500">الميزانية</span>
+                    <span className="font-bold text-[#15803d]">{selectedDesign.budget.toLocaleString()} ج.م</span>
+                  </div>
+                )}
+                {selectedDesign.designStyle && (
+                  <div className="flex justify-between border-b border-gray-200 border-dashed pb-2">
+                    <span className="text-gray-500">نمط التصميم</span>
+                    <span className="font-bold text-[#0a2e1f]">{selectedDesign.designStyle}</span>
+                  </div>
+                )}
+                {selectedDesign.notes && (
+                  <div className="pt-2">
+                    <span className="text-gray-500 block mb-1">ملاحظات</span>
+                    <p className="bg-white p-3 rounded-xl border border-gray-200 text-gray-800">{selectedDesign.notes}</p>
+                  </div>
+                )}
+              </div>
+              
+              <button
+                onClick={() => setSelectedDesign(null)}
+                className="w-full bg-[#15803d] text-white mt-6 py-3.5 rounded-xl font-bold hover:bg-[#0a2e1f] transition shadow-lg shadow-[#15803d]/30"
+              >
+                إغلاق
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

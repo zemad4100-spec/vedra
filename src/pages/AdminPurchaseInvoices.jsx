@@ -24,7 +24,8 @@ export default function AdminPurchaseInvoiceNew() {
   const [items, setItems] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState('');
   const [selectedQty, setSelectedQty] = useState(1);
-  const [selectedCost, setSelectedCost] = useState(0);
+  const [selectedCost, setSelectedCost] = useState(0); // سعر الشراء
+  const [selectedSellingPrice, setSelectedSellingPrice] = useState(0); // ✅ سعر البيع
 
   useEffect(() => {
     const loadData = async () => {
@@ -40,6 +41,7 @@ export default function AdminPurchaseInvoiceNew() {
         if (prods.length > 0) {
           setSelectedProduct(prods[0].id);
           setSelectedCost(prods[0].costPrice || prods[0].basePrice || 0);
+          setSelectedSellingPrice(prods[0].effectivePrice || 0); // ✅
         }
       } catch (err) {
         console.error(err);
@@ -53,13 +55,17 @@ export default function AdminPurchaseInvoiceNew() {
   const handleProductChange = (productId) => {
     setSelectedProduct(productId);
     const product = products.find(p => p.id === parseInt(productId));
-    if (product) setSelectedCost(product.costPrice || product.basePrice || 0);
+    if (product) {
+      setSelectedCost(product.costPrice || product.basePrice || 0);
+      setSelectedSellingPrice(product.effectivePrice || 0); // ✅
+    }
   };
 
   const addItem = () => {
     if (!selectedProduct) return showError('يجب اختيار منتج');
     if (selectedQty <= 0) return showError('الكمية يجب أن تكون أكبر من صفر');
-    if (selectedCost <= 0) return showError('التكلفة يجب أن تكون أكبر من صفر');
+    if (selectedCost <= 0) return showError('سعر الشراء يجب أن يكون أكبر من صفر');
+    if (selectedSellingPrice <= 0) return showError('سعر البيع يجب أن يكون أكبر من صفر');
 
     const product = products.find(p => p.id === parseInt(selectedProduct));
     if (!product) return;
@@ -77,7 +83,8 @@ export default function AdminPurchaseInvoiceNew() {
         productNameAr: product.nameAr,
         sku: product.sku,
         quantity: selectedQty,
-        unitCost: selectedCost,
+        unitCost: selectedCost, // سعر الشراء
+        sellingPrice: selectedSellingPrice, // ✅ سعر البيع
         lineTotal: selectedQty * selectedCost,
       }]);
     }
@@ -102,6 +109,15 @@ export default function AdminPurchaseInvoiceNew() {
     if (cost < 0) return;
     setItems(items.map(i => i.productId === productId
       ? { ...i, unitCost: cost, lineTotal: i.quantity * cost }
+      : i
+    ));
+  };
+
+  // ✅ تحديث سعر البيع
+  const updateItemSellingPrice = (productId, price) => {
+    if (price < 0) return;
+    setItems(items.map(i => i.productId === productId
+      ? { ...i, sellingPrice: price }
       : i
     ));
   };
@@ -132,6 +148,7 @@ export default function AdminPurchaseInvoiceNew() {
           productId: i.productId,
           quantity: i.quantity,
           unitCost: i.unitCost,
+          sellingPrice: i.sellingPrice, // ✅ بنبعت سعر البيع
         })),
       };
 
@@ -223,7 +240,7 @@ export default function AdminPurchaseInvoiceNew() {
                 <span>📦</span> إضافة منتجات
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-                <div className="md:col-span-5">
+                <div className="md:col-span-4">
                   <label className="text-sm font-bold text-gray-700 block mb-1.5">المنتج</label>
                   <select
                     className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:ring-2 focus:ring-[#15803d] focus:border-transparent outline-none transition"
@@ -235,7 +252,7 @@ export default function AdminPurchaseInvoiceNew() {
                     ))}
                   </select>
                 </div>
-                <div className="md:col-span-3">
+                <div className="md:col-span-2">
                   <label className="text-sm font-bold text-gray-700 block mb-1.5">الكمية</label>
                   <input
                     type="number"
@@ -246,12 +263,23 @@ export default function AdminPurchaseInvoiceNew() {
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="text-sm font-bold text-gray-700 block mb-1.5">سعر التكلفة</label>
+                  <label className="text-sm font-bold text-gray-700 block mb-1.5">سعر الشراء</label>
                   <input
                     type="number"
                     className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:ring-2 focus:ring-[#15803d] focus:border-transparent outline-none transition text-center"
                     value={selectedCost}
                     onChange={(e) => setSelectedCost(Number(e.target.value))}
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="text-sm font-bold text-gray-700 block mb-1.5">سعر البيع</label>
+                  <input
+                    type="number"
+                    className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:ring-2 focus:ring-[#15803d] focus:border-transparent outline-none transition text-center"
+                    value={selectedSellingPrice}
+                    onChange={(e) => setSelectedSellingPrice(Number(e.target.value))}
                     min="0"
                     step="0.01"
                   />
@@ -274,12 +302,13 @@ export default function AdminPurchaseInvoiceNew() {
                 <h3 className="font-bold text-gray-700">المنتجات المضافة ({items.length})</h3>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[600px]">
+                <table className="w-full min-w-[700px]">
                   <thead>
                     <tr className="bg-white border-b border-gray-100">
                       <th className="p-4 text-right text-xs font-bold text-gray-500">المنتج</th>
                       <th className="p-4 text-center text-xs font-bold text-gray-500">الكمية</th>
-                      <th className="p-4 text-center text-xs font-bold text-gray-500">سعر التكلفة</th>
+                      <th className="p-4 text-center text-xs font-bold text-gray-500">سعر الشراء</th>
+                      <th className="p-4 text-center text-xs font-bold text-gray-500">سعر البيع</th>
                       <th className="p-4 text-left text-xs font-bold text-gray-500">الإجمالي</th>
                       <th className="p-4"></th>
                     </tr>
@@ -310,6 +339,17 @@ export default function AdminPurchaseInvoiceNew() {
                             step="0.01"
                           />
                         </td>
+                        <td className="p-4 text-center">
+                          {/* ✅ حقل تعديل سعر البيع */}
+                          <input
+                            type="number"
+                            value={item.sellingPrice}
+                            onChange={(e) => updateItemSellingPrice(item.productId, Number(e.target.value))}
+                            className="w-24 border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-center focus:ring-2 focus:ring-[#15803d] outline-none"
+                            min="0"
+                            step="0.01"
+                          />
+                        </td>
                         <td className="p-4 text-left font-bold text-[#15803d]">
                           {item.lineTotal?.toLocaleString()} <span className="text-xs">ج.م</span>
                         </td>
@@ -326,7 +366,7 @@ export default function AdminPurchaseInvoiceNew() {
                     ))}
                     {items.length === 0 && (
                       <tr>
-                        <td colSpan="5" className="p-10 text-center text-gray-400">
+                        <td colSpan="6" className="p-10 text-center text-gray-400">
                           <span className="text-4xl block mb-2 opacity-30">🛒</span>
                           لم تتم إضافة أي منتجات بعد
                         </td>
