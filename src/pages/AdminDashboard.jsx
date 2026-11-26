@@ -55,15 +55,15 @@ export default function AdminDashboard() {
     salesChart: []
   };
 
+  // بيانات الرسم البياني
   const chartData = displayStats.salesChart || [];
 
-  // تحديد أعلى قيمة للمبيعات
   const maxSales = Math.max(
     ...chartData.map(d => Number(d.sales) || 0),
     1
   );
 
-  // تحديد لون العمود
+  // ألوان الأعمدة
   const getBarColor = (sales) => {
     const percentage = (Number(sales) / maxSales) * 100;
 
@@ -102,7 +102,6 @@ export default function AdminDashboard() {
 
             <div className="flex items-center gap-2 text-sm font-bold mb-1">
               <span>📅</span>
-
               {new Date().toLocaleDateString('ar-EG', {
                 weekday: 'long',
                 year: 'numeric',
@@ -113,7 +112,6 @@ export default function AdminDashboard() {
 
             <div className="flex items-center gap-2 text-2xl font-bold">
               <span>🕒</span>
-
               {new Date().toLocaleTimeString('ar-EG', {
                 hour: '2-digit',
                 minute: '2-digit'
@@ -241,7 +239,6 @@ export default function AdminDashboard() {
 
             <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
               <span>📊</span>
-
               مبيعات {
                 period === 'week'
                   ? 'آخر 7 أيام'
@@ -301,34 +298,29 @@ export default function AdminDashboard() {
                 <div className="flex-1 relative">
 
                   <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-
                     {[0, 1, 2, 3].map(i => (
                       <div
                         key={i}
                         className="w-full border-t border-dashed border-gray-100"
                       />
                     ))}
-
                   </div>
 
-                  {/* Bars */}
-                  <div className="absolute inset-0 flex items-end justify-around gap-2 px-2">
+                  {/* Bars - Small Gaps */}
+                  <div className="absolute inset-0 flex items-end justify-center gap-2 px-1">
 
                     {chartData.map((item, index) => {
 
                       const sales = Number(item.sales) || 0;
 
-                      const height = Math.max(
-                        (sales / maxSales) * 90,
-                        sales > 0 ? 2 : 0
-                      );
+                      const height = (sales / maxSales) * 90;
 
                       const color = getBarColor(sales);
 
                       return (
                         <div
                           key={index}
-                          className="group relative flex-1 h-full flex flex-col justify-end items-center"
+                          className="group relative w-8 sm:w-9 shrink-0 h-full flex flex-col justify-end items-center"
                         >
 
                           {/* Tooltip */}
@@ -345,22 +337,18 @@ export default function AdminDashboard() {
                               </p>
 
                             </div>
-
                           </div>
 
                           {/* Bar */}
                           <div
-                            className="w-full max-w-[28px] rounded-t-md transition-all duration-500 hover:brightness-110 cursor-pointer relative"
+                            className="w-full rounded-t-md transition-all duration-500 hover:brightness-110 cursor-pointer relative"
                             style={{
                               height: `${height}%`,
                               backgroundColor: color,
                               minHeight: sales > 0 ? '4px' : '0px'
                             }}
                           >
-
-                            {/* Bar Highlight */}
                             <div className="absolute top-0 left-0 w-full h-1 bg-white/30 rounded-t-md" />
-
                           </div>
 
                         </div>
@@ -371,12 +359,12 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Dates */}
-                <div className="flex justify-around gap-2 mt-3 px-2">
+                <div className="flex justify-center gap-2 mt-3">
 
                   {chartData.map((item, index) => (
                     <div
                       key={index}
-                      className="flex-1 text-center text-[10px] md:text-xs text-gray-400 font-bold truncate"
+                      className="w-8 sm:w-9 shrink-0 text-center text-[10px] md:text-xs text-gray-400 font-bold truncate"
                       title={item.date}
                     >
                       {item.date}
@@ -423,12 +411,10 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col">
 
           <div className="flex justify-between items-center mb-6">
-
             <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
               <span>🏆</span>
               المنتجات الأكثر مبيعاً
             </h2>
-
           </div>
 
           <div className="space-y-4 flex-1 overflow-y-auto no-scrollbar">
@@ -486,7 +472,6 @@ export default function AdminDashboard() {
             )}
 
           </div>
-
         </div>
 
       </div>
