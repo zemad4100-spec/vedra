@@ -111,7 +111,6 @@ export default function AdminProducts() {
     setShowModal(true);
   };
 
-  // ✅ رفع الصور مع سطر تشخيص
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
@@ -128,32 +127,22 @@ export default function AdminProducts() {
 
         const res = await api.post('/upload/image', formData);
 
-        // ✅ سطر التشخيص المهم
         console.log('الرابط الراجع من الباك إند:', res.data.data.url);
 
         if (res.data.success && res.data.data.url) {
           let imageUrl = res.data.data.url;
-
-          // 1. نشيل أي باراميترز غريبة
           imageUrl = imageUrl.split('?')[0].split('#')[0];
-
-          // 2. نتأكد إن الرابط آمن (https)
           imageUrl = imageUrl.replace('http://', 'https://');
-
-          // 3. نشيل أي تكرار للدومين
           const domain = 'https://kilogram-parabola-showing.ngrok-free.dev';
           if (imageUrl.includes(domain + domain)) {
             imageUrl = imageUrl.replace(domain + domain, domain);
           }
-          
-          // 4. لو مش بيبدأ بـ http، نضيف الدومين
           if (!imageUrl.startsWith('http')) {
             if (!imageUrl.startsWith('/')) {
               imageUrl = '/' + imageUrl;
             }
             imageUrl = `${domain}${imageUrl}`;
           }
-
           uploadedUrls.push(imageUrl);
         } else {
           throw new Error(res.data.message || 'فشل رفع الصورة');
@@ -211,6 +200,9 @@ export default function AdminProducts() {
         isActive: form.isActive,
         imageUrls: form.imageUrls || [],
       };
+
+      // ✅ سطر التشخيص المهم: اطبع الـ Payload
+      console.log('Payload sent:', payload);
 
       if (editingProduct) {
         await api.put(`/admin/products/${editingProduct.id}`, payload);
@@ -444,7 +436,6 @@ export default function AdminProducts() {
                     </div>
                   )}
 
-                  {/* رفع من الجهاز */}
                   <label className="block border-2 border-dashed border-gray-300 rounded-xl p-4 text-center cursor-pointer hover:border-brand-main transition mb-2">
                     <input
                       type="file"
@@ -464,7 +455,6 @@ export default function AdminProducts() {
                     )}
                   </label>
 
-                  {/* إضافة لينك صورة */}
                   <div className="mt-3">
                     <label className="text-sm font-bold block mb-1">أو أضف رابط صورة من النت</label>
                     <div className="flex flex-col sm:flex-row gap-2">
