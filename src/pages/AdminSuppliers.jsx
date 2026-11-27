@@ -95,172 +95,191 @@ export default function AdminSuppliers() {
     s.phone?.includes(search)
   );
 
-  if (loading) return <div className="text-center py-20">جاري التحميل...</div>;
+  if (loading) return <div className="text-center py-20 text-gray-500">جاري تحميل الموردين...</div>;
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-serif font-bold text-brand-dark">🚚 الموردين</h1>
-        <button onClick={openAddModal} className="btn-primary">
-          + إضافة مورد جديد
-        </button>
-      </div>
+    <div className="pb-10 bg-[#f4f7f6] min-h-screen -m-6 p-6">
+      <div className="max-w-7xl mx-auto">
+        
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#0a2e1f]">🚚 الموردين</h1>
+            <p className="text-gray-500 mt-1 text-sm">إدارة بيانات الموردين والجهات الخارجية</p>
+          </div>
+          <button 
+            onClick={openAddModal} 
+            className="bg-[#15803d] text-white px-5 py-2.5 rounded-xl font-bold hover:bg-[#0a2e1f] transition shadow-lg shadow-[#15803d]/30 flex items-center gap-2 w-full sm:w-auto justify-center"
+          >
+            <span>+</span> إضافة مورد جديد
+          </button>
+        </div>
 
-      {/* Search */}
-      <div className="mb-4">
-        <input
-          type="text"
-          placeholder="🔍 بحث بالاسم أو الهاتف..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="input-field"
-        />
-      </div>
+        {/* Search */}
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6">
+          <div className="relative w-full md:w-96">
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+            <input
+              type="text"
+              placeholder="بحث بالاسم أو الهاتف..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full p-3 pr-12 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-[#15803d] outline-none transition"
+            />
+          </div>
+        </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="p-4 text-right text-xs font-bold text-gray-500">#</th>
-              <th className="p-4 text-right text-xs font-bold text-gray-500">الاسم</th>
-              <th className="p-4 text-right text-xs font-bold text-gray-500">جهة الاتصال</th>
-              <th className="p-4 text-right text-xs font-bold text-gray-500">الهاتف</th>
-              <th className="p-4 text-right text-xs font-bold text-gray-500">البريد</th>
-              <th className="p-4 text-right text-xs font-bold text-gray-500">الحالة</th>
-              <th className="p-4 text-right text-xs font-bold text-gray-500">إجراءات</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(s => (
-              <tr key={s.id} className="border-t border-gray-100 hover:bg-gray-50">
-                <td className="p-4 text-sm">{s.id}</td>
-                <td className="p-4 text-sm font-bold">{s.name}</td>
-                <td className="p-4 text-sm text-gray-600">{s.contactName || '-'}</td>
-                <td className="p-4 text-sm text-gray-600">{s.phone || '-'}</td>
-                <td className="p-4 text-sm text-gray-600">{s.email || '-'}</td>
-                <td className="p-4">
-                  <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                    s.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                  }`}>
-                    {s.isActive ? 'نشط' : 'موقوف'}
-                  </span>
-                </td>
-                <td className="p-4">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => openEditModal(s)}
-                      className="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg text-xs font-bold hover:bg-blue-200"
-                    >
-                      تعديل
-                    </button>
-                    <button
-                      onClick={() => handleDelete(s.id)}
-                      className="bg-red-100 text-red-700 px-3 py-1 rounded-lg text-xs font-bold hover:bg-red-200"
-                    >
-                      حذف
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {filtered.length === 0 && (
-              <tr>
-                <td colSpan="7" className="p-8 text-center text-gray-500">
-                  لا يوجد موردين
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+        {/* Table */}
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[800px]">
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>
+                  <th className="p-4 text-right text-xs font-bold text-gray-500">#</th>
+                  <th className="p-4 text-right text-xs font-bold text-gray-500">الاسم</th>
+                  <th className="p-4 text-right text-xs font-bold text-gray-500">جهة الاتصال</th>
+                  <th className="p-4 text-right text-xs font-bold text-gray-500">الهاتف</th>
+                  <th className="p-4 text-right text-xs font-bold text-gray-500">البريد</th>
+                  <th className="p-4 text-center text-xs font-bold text-gray-500">الحالة</th>
+                  <th className="p-4 text-center text-xs font-bold text-gray-500">إجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(s => (
+                  <tr key={s.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition">
+                    <td className="p-4 text-sm text-gray-500 font-bold">#{s.id}</td>
+                    <td className="p-4 text-sm font-bold text-[#0a2e1f]">{s.name}</td>
+                    <td className="p-4 text-sm text-gray-600">{s.contactName || '-'}</td>
+                    <td className="p-4 text-sm text-gray-600 font-mono">{s.phone || '-'}</td>
+                    <td className="p-4 text-sm text-gray-600">{s.email || '-'}</td>
+                    <td className="p-4 text-center">
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold border ${
+                        s.isActive ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-100 text-red-700 border-red-200'
+                      }`}>
+                        {s.isActive ? 'نشط' : 'موقوف'}
+                      </span>
+                    </td>
+                    <td className="p-4 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => openEditModal(s)}
+                          className="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-100 transition"
+                        >
+                          تعديل
+                        </button>
+                        <button
+                          onClick={() => handleDelete(s.id)}
+                          className="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-100 transition"
+                        >
+                          حذف
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {filtered.length === 0 && (
+                  <tr>
+                    <td colSpan="7" className="p-10 text-center text-gray-400">
+                      <span className="text-4xl block mb-2 opacity-30">🚚</span>
+                      لا يوجد موردين مطابقين للبحث
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-auto">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-lg my-8">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-lg shadow-2xl animate-fade-in">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-brand-dark">
+              <h2 className="text-xl font-bold text-[#0a2e1f] flex items-center gap-2">
                 {editingSupplier ? '✏️ تعديل المورد' : '➕ مورد جديد'}
               </h2>
-              <button onClick={() => setShowModal(false)} className="text-2xl">✕</button>
+              <button onClick={() => setShowModal(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 transition">
+                ✕
+              </button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="text-sm font-bold block mb-1">اسم المورد *</label>
+                <label className="text-sm font-bold text-gray-700 block mb-1.5">اسم المورد *</label>
                 <input
                   type="text"
-                  className="input-field"
+                  className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:ring-2 focus:ring-[#15803d] outline-none transition"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   required
                 />
               </div>
               <div>
-                <label className="text-sm font-bold block mb-1">جهة الاتصال</label>
+                <label className="text-sm font-bold text-gray-700 block mb-1.5">جهة الاتصال</label>
                 <input
                   type="text"
-                  className="input-field"
+                  className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:ring-2 focus:ring-[#15803d] outline-none transition"
                   value={form.contactName}
                   onChange={(e) => setForm({ ...form, contactName: e.target.value })}
                 />
               </div>
-              <div className="grid md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-bold block mb-1">الهاتف</label>
+                  <label className="text-sm font-bold text-gray-700 block mb-1.5">الهاتف</label>
                   <input
                     type="tel"
-                    className="input-field"
+                    className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:ring-2 focus:ring-[#15803d] outline-none transition text-left font-mono"
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-bold block mb-1">البريد الإلكتروني</label>
+                  <label className="text-sm font-bold text-gray-700 block mb-1.5">البريد الإلكتروني</label>
                   <input
                     type="email"
-                    className="input-field"
+                    className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:ring-2 focus:ring-[#15803d] outline-none transition text-left"
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                   />
                 </div>
               </div>
               <div>
-                <label className="text-sm font-bold block mb-1">العنوان</label>
+                <label className="text-sm font-bold text-gray-700 block mb-1.5">العنوان</label>
                 <input
                   type="text"
-                  className="input-field"
+                  className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:ring-2 focus:ring-[#15803d] outline-none transition"
                   value={form.address}
                   onChange={(e) => setForm({ ...form, address: e.target.value })}
                 />
               </div>
               <div>
-                <label className="text-sm font-bold block mb-1">ملاحظات</label>
+                <label className="text-sm font-bold text-gray-700 block mb-1.5">ملاحظات</label>
                 <textarea
-                  className="input-field"
+                  className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:ring-2 focus:ring-[#15803d] outline-none transition resize-none"
                   rows="2"
                   value={form.notes}
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 />
               </div>
-              <label className="flex items-center gap-2 cursor-pointer">
+              <label className="flex items-center gap-2 cursor-pointer py-2">
                 <input
                   type="checkbox"
                   checked={form.isActive}
                   onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+                  className="w-4 h-4 text-[#15803d] rounded focus:ring-[#15803d]"
                 />
-                <span className="text-sm font-bold">المورد نشط</span>
+                <span className="text-sm font-bold text-gray-700">المورد نشط</span>
               </label>
 
-              <div className="flex gap-3 pt-4">
-                <button type="submit" className="btn-primary flex-1 py-3">
+              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-100">
+                <button type="submit" className="flex-1 bg-[#15803d] text-white py-3.5 rounded-xl font-bold hover:bg-[#0a2e1f] transition shadow-lg shadow-[#15803d]/30">
                   {editingSupplier ? '💾 حفظ التعديلات' : '✅ إضافة المورد'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="bg-gray-200 px-6 py-3 rounded-xl font-bold hover:bg-gray-300"
+                  className="bg-white text-gray-700 border-2 border-gray-200 px-6 py-3.5 rounded-xl font-bold hover:bg-gray-50 transition"
                 >
                   إلغاء
                 </button>
