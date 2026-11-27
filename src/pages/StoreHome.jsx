@@ -11,16 +11,24 @@ export default function StoreHome() {
   const [loading, setLoading] = useState(true);
   const [addingId, setAddingId] = useState(null);
 
+  // الانتقال إلى قسم داخل نفس الصفحة
+  const scrollToSection = (id) => {
+    document.getElementById(id)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const prodRes = await api.get('/products', {
+        const res = await api.get('/products', {
           params: { pageSize: 20 }
         });
 
-        setProducts(prodRes.data?.data?.items || []);
+        setProducts(res.data?.data?.items || []);
       } catch (err) {
-        console.error('Products error:', err);
+        console.error(err);
         showError('تعذر تحميل المنتجات');
       } finally {
         setLoading(false);
@@ -31,7 +39,7 @@ export default function StoreHome() {
   }, []);
 
   const handleAddToCart = async (productId) => {
-    if (addingId) return;
+    if (addingId !== null) return;
 
     setAddingId(productId);
 
@@ -43,17 +51,15 @@ export default function StoreHome() {
 
       if (res.data.success) {
         showSuccess('تمت الإضافة للسلة بنجاح 🛒');
-
         window.dispatchEvent(new Event('cart-updated'));
       } else {
         showError(res.data.message || 'فشل الإضافة للسلة');
       }
     } catch (err) {
-      const msg =
+      showError(
         err.response?.data?.message ||
-        'فشل الإضافة للسلة، تأكد من تسجيل الدخول';
-
-      showError(msg);
+        'فشل الإضافة للسلة، تأكد من تسجيل الدخول'
+      );
     } finally {
       setAddingId(null);
     }
@@ -82,6 +88,13 @@ export default function StoreHome() {
     }
   ];
 
+  const categories = [
+    { icon: '🪴', name: 'نباتات منزلية' },
+    { icon: '🌳', name: 'نباتات خارجية' },
+    { icon: '🌵', name: 'نباتات صبار' },
+    { icon: '🧺', name: 'أدوات الزراعة' }
+  ];
+
   const spaces = [
     {
       title: 'البلكونة',
@@ -104,10 +117,10 @@ export default function StoreHome() {
   return (
     <div dir="rtl" className="bg-[#f7faf7] overflow-hidden">
 
-      {/* Hero */}
+      {/* Hero Banner */}
       <section className="max-w-7xl mx-auto px-3 sm:px-5 pt-5">
 
-        <div className="relative min-h-[340px] sm:min-h-[430px] lg:min-h-[470px] rounded-3xl overflow-hidden bg-[#0a3824] shadow-xl">
+        <div className="relative min-h-[340px] sm:min-h-[430px] rounded-3xl overflow-hidden bg-[#0a3824] shadow-xl">
 
           <img
             src="https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=2000&q=85"
@@ -117,7 +130,7 @@ export default function StoreHome() {
 
           <div className="absolute inset-0 bg-gradient-to-l from-[#052c1c]/95 via-[#073b25]/75 to-transparent" />
 
-          <div className="relative z-10 flex items-center min-h-[340px] sm:min-h-[430px] lg:min-h-[470px] px-6 sm:px-12 lg:px-20">
+          <div className="relative z-10 flex items-center min-h-[340px] sm:min-h-[430px] px-6 sm:px-12 lg:px-20">
 
             <div className="max-w-xl text-white">
 
@@ -125,11 +138,11 @@ export default function StoreHome() {
                 🌿 أهلاً بك في عالم Verda
               </span>
 
-              <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-wide mb-4">
+              <h1 className="text-5xl sm:text-7xl font-black mb-4">
                 Verda
               </h1>
 
-              <h2 className="text-xl sm:text-3xl font-bold leading-relaxed mb-3">
+              <h2 className="text-xl sm:text-3xl font-bold mb-3">
                 حوّل منزلك إلى واحة خضراء
               </h2>
 
@@ -140,19 +153,21 @@ export default function StoreHome() {
 
               <div className="flex flex-wrap gap-3">
 
-                <Link
-                  to="/products"
+                {/* تسوق الآن ينزل للمنتجات */}
+                <button
+                  onClick={() => scrollToSection('products')}
                   className="bg-yellow-400 hover:bg-yellow-300 text-green-950 px-7 py-3.5 rounded-xl font-black shadow-lg transition"
                 >
-                  تسوق الآن ←
-                </Link>
+                  🛒 تسوق الآن
+                </button>
 
-                <Link
-                  to="/design"
+                {/* صمم الآن ينزل للتصميم */}
+                <button
+                  onClick={() => scrollToSection('design')}
                   className="border border-white/60 hover:bg-white/10 text-white px-7 py-3.5 rounded-xl font-bold transition"
                 >
-                  صمم مساحتك
-                </Link>
+                  🎨 صمم الآن
+                </button>
 
               </div>
             </div>
@@ -172,22 +187,17 @@ export default function StoreHome() {
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
 
-          {[
-            { icon: '🪴', name: 'نباتات منزلية' },
-            { icon: '🌳', name: 'نباتات خارجية' },
-            { icon: '🌵', name: 'نباتات صبار' },
-            { icon: '🧺', name: 'أدوات الزراعة' }
-          ].map((item, index) => (
-            <Link
+          {categories.map((item, index) => (
+            <button
               key={index}
-              to="/products"
-              className="bg-white border border-green-100 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-center gap-3 hover:shadow-lg hover:border-green-400 hover:-translate-y-1 transition"
+              onClick={() => navigate('/products')}
+              className="bg-white border border-green-100 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-center gap-3 hover:shadow-lg hover:border-green-400 transition"
             >
               <span className="text-4xl">{item.icon}</span>
               <span className="font-black text-sm sm:text-base text-[#0a3824]">
                 {item.name}
               </span>
-            </Link>
+            </button>
           ))}
 
         </div>
@@ -200,9 +210,11 @@ export default function StoreHome() {
           <span className="text-green-700 font-bold text-sm">
             WHY VERDA?
           </span>
+
           <h2 className="text-2xl sm:text-3xl font-black text-[#0a3824] mt-2">
             لماذا تختار Verda؟
           </h2>
+
           <p className="text-gray-500 text-sm mt-2">
             تجربة تسوق مميزة تبدأ من هنا
           </p>
@@ -232,18 +244,23 @@ export default function StoreHome() {
         </div>
       </section>
 
-      {/* Best Sellers */}
+      {/* Products / Best Sellers */}
       <section
-        id="best-sellers"
-        className="max-w-7xl mx-auto px-3 sm:px-5 py-8 scroll-mt-32"
+        id="products"
+        className="max-w-7xl mx-auto px-3 sm:px-5 py-8 scroll-mt-36"
       >
 
-        <div className="flex items-center justify-between mb-5">
+        {/* نفس القسم يستقبل زري تسوق والأكثر مبيعاً */}
+        <div
+          id="best-sellers"
+          className="flex items-center justify-between mb-5 scroll-mt-36"
+        >
 
           <div>
             <span className="text-green-700 text-xs font-bold">
               OUR PRODUCTS
             </span>
+
             <h2 className="text-xl sm:text-3xl font-black text-[#0a3824]">
               ⭐ الأكثر مبيعاً
             </h2>
@@ -253,7 +270,7 @@ export default function StoreHome() {
             to="/products"
             className="bg-green-100 text-green-800 hover:bg-green-200 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition"
           >
-            عرض الكل ←
+            عرض كل المنتجات ←
           </Link>
 
         </div>
@@ -322,15 +339,13 @@ export default function StoreHome() {
                       <span className="text-green-700 font-black text-sm sm:text-lg">
                         {Number(p.effectivePrice || 0).toLocaleString('ar-EG')} ج.م
                       </span>
-                      <span className="text-yellow-500 text-xs">
-                        🌿
-                      </span>
+                      <span className="text-yellow-500 text-xs">🌿</span>
                     </div>
 
                     <button
-                      disabled={addingId === p.id}
+                      disabled={addingId !== null}
                       onClick={() => handleAddToCart(p.id)}
-                      className="w-full bg-[#116b3b] hover:bg-[#0a3824] disabled:opacity-50 text-white py-2.5 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2"
+                      className="w-full bg-[#116b3b] hover:bg-[#0a3824] disabled:opacity-50 text-white py-2.5 rounded-xl font-bold text-xs sm:text-sm transition"
                     >
                       {addingId === p.id ? 'جاري الإضافة...' : '🛒 أضف للسلة'}
                     </button>
@@ -350,12 +365,13 @@ export default function StoreHome() {
       {/* Design Spaces */}
       <section
         id="design"
-        className="max-w-7xl mx-auto px-3 sm:px-5 py-8 scroll-mt-32"
+        className="max-w-7xl mx-auto px-3 sm:px-5 py-8 scroll-mt-36"
       >
 
         <div className="bg-[#0a3824] rounded-3xl p-5 sm:p-10 overflow-hidden">
 
           <div className="text-center mb-8">
+
             <span className="text-green-300 text-xs font-bold">
               MAKE IT GREEN
             </span>
@@ -367,6 +383,7 @@ export default function StoreHome() {
             <p className="text-green-100 text-sm mt-3">
               اختر مساحتك ودعنا نساعدك في تحويلها إلى مكان مميز
             </p>
+
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
@@ -395,12 +412,14 @@ export default function StoreHome() {
           </div>
 
           <div className="text-center mt-8">
+
             <button
               onClick={() => navigate('/design')}
               className="bg-yellow-400 hover:bg-yellow-300 text-green-950 px-8 py-3.5 rounded-xl font-black transition shadow-lg"
             >
               اطلب تصميم مساحتك الآن ←
             </button>
+
           </div>
 
         </div>
@@ -408,29 +427,28 @@ export default function StoreHome() {
 
       {/* Bottom Banner */}
       <section className="max-w-7xl mx-auto px-3 sm:px-5 pb-12">
+
         <div className="bg-green-100 rounded-3xl p-6 sm:p-10 flex flex-col sm:flex-row items-center justify-between gap-5">
 
           <div>
             <h2 className="text-xl sm:text-3xl font-black text-[#0a3824]">
               ابدأ رحلتك مع الطبيعة 🌱
             </h2>
+
             <p className="text-gray-600 mt-2 text-sm">
               اكتشف مجموعتنا المميزة من النباتات والمنتجات.
             </p>
           </div>
 
-          <Link
-            to="/products"
+          <button
+            onClick={() => scrollToSection('products')}
             className="bg-[#116b3b] hover:bg-[#0a3824] text-white px-8 py-3 rounded-xl font-bold transition whitespace-nowrap"
           >
-            اكتشف المتجر
-          </Link>
+            تسوق الآن
+          </button>
 
         </div>
       </section>
-
-      {/* Space for mobile bottom navigation */}
-      <div className="h-16 md:hidden" />
 
     </div>
   );

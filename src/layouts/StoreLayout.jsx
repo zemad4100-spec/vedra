@@ -12,20 +12,24 @@ export default function StoreLayout() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const isAdmin = user && ['Admin', 'StoreManager'].includes(user.role);
+  const isAdmin = user &&
+    ['Admin', 'StoreManager'].includes(user.role);
 
   useEffect(() => {
     try {
       const userData = localStorage.getItem('user');
       if (userData) setUser(JSON.parse(userData));
     } catch (err) {
-      console.error('User data error:', err);
+      console.error(err);
     }
   }, []);
 
   const fetchCartCount = async () => {
     const sessionId = localStorage.getItem('sessionId');
-    if (!sessionId) return;
+    if (!sessionId) {
+      setCartCount(0);
+      return;
+    }
 
     try {
       const res = await cartService.getCart(sessionId);
@@ -46,9 +50,25 @@ export default function StoreLayout() {
     };
   }, [location.pathname]);
 
+  // الانتقال للأقسام حتى عند القدوم من صفحة أخرى
+  useEffect(() => {
+    if (!location.hash) return;
+
+    const sectionId = location.hash.slice(1);
+
+    const timer = window.setTimeout(() => {
+      document.getElementById(sectionId)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }, 150);
+
+    return () => window.clearTimeout(timer);
+  }, [location.pathname, location.hash]);
+
   useEffect(() => {
     setMobileMenu(false);
-  }, [location.pathname]);
+  }, [location.pathname, location.hash]);
 
   const logout = () => {
     localStorage.clear();
@@ -58,22 +78,19 @@ export default function StoreLayout() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    const value = search.trim();
-    if (value) {
-      navigate(`/products?search=${encodeURIComponent(value)}`);
+
+    if (search.trim()) {
+      navigate(`/products?search=${encodeURIComponent(search.trim())}`);
     }
   };
 
-  const navLink = (to, label, icon) => (
+  const menuLink = (to, label, icon) => (
     <Link
       to={to}
-      className={`flex items-center gap-2 px-4 py-3 rounded-xl font-bold text-sm transition ${
-        location.pathname === to
-          ? 'bg-green-100 text-green-800'
-          : 'text-gray-700 hover:bg-green-50 hover:text-green-800'
-      }`}
+      onClick={() => setMobileMenu(false)}
+      className="flex items-center gap-3 p-3 rounded-xl text-gray-700 hover:bg-green-50 hover:text-green-800 font-bold text-sm"
     >
-      <span>{icon}</span>
+      <span className="text-xl">{icon}</span>
       {label}
     </Link>
   );
@@ -93,7 +110,6 @@ export default function StoreLayout() {
 
           <div className="flex items-center justify-between gap-3">
 
-            {/* Mobile menu */}
             <button
               onClick={() => setMobileMenu(!mobileMenu)}
               className="md:hidden w-10 h-10 rounded-xl bg-white/10 text-white text-xl flex items-center justify-center"
@@ -104,18 +120,18 @@ export default function StoreLayout() {
 
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2 shrink-0">
-              <div className="text-3xl sm:text-4xl">🌿</div>
+              <span className="text-3xl sm:text-4xl">🌿</span>
               <div>
-                <h1 className="text-2xl sm:text-3xl font-black text-white tracking-wide">
+                <h1 className="text-2xl sm:text-3xl font-black text-white">
                   Verda
                 </h1>
-                <p className="text-[8px] sm:text-[9px] text-green-300 font-bold tracking-widest">
+                <p className="text-[8px] text-green-300 font-bold tracking-widest">
                   LIVE GREEN · LIVE BETTER
                 </p>
               </div>
             </Link>
 
-            {/* Desktop search */}
+            {/* Search Desktop */}
             <form
               onSubmit={handleSearch}
               className="hidden md:block flex-1 max-w-xl"
@@ -129,29 +145,28 @@ export default function StoreLayout() {
                 />
                 <button
                   type="submit"
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-xl"
+                  className="absolute right-4 top-1/2 -translate-y-1/2"
                 >
                   🔍
                 </button>
               </div>
             </form>
 
-            {/* Header actions */}
-            <div className="flex items-center gap-2 sm:gap-5 text-white">
+            {/* Actions */}
+            <div className="flex items-center gap-3 sm:gap-5 text-white">
 
-              {/* Account */}
               <div className="hidden sm:flex flex-col items-center text-xs gap-1">
                 <span className="text-xl">👤</span>
-                <span>{user ? 'حسابي' : 'حسابي'}</span>
+                <span>حسابي</span>
               </div>
 
-              {/* Cart */}
               <Link
                 to="/cart"
-                className="relative flex flex-col items-center gap-1 hover:text-green-300"
+                className="relative flex flex-col items-center gap-1"
               >
                 <span className="text-2xl">🛒</span>
                 <span className="hidden sm:block text-xs">السلة</span>
+
                 {cartCount > 0 && (
                   <span className="absolute -top-1 -right-2 bg-yellow-400 text-green-950 text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center">
                     {cartCount}
@@ -159,7 +174,6 @@ export default function StoreLayout() {
                 )}
               </Link>
 
-              {/* Admin button - Desktop */}
               {isAdmin && (
                 <Link
                   to="/admin"
@@ -169,7 +183,6 @@ export default function StoreLayout() {
                 </Link>
               )}
 
-              {/* Login / Logout */}
               {user ? (
                 <button
                   onClick={logout}
@@ -189,7 +202,7 @@ export default function StoreLayout() {
             </div>
           </div>
 
-          {/* Mobile search */}
+          {/* Mobile Search */}
           <form onSubmit={handleSearch} className="md:hidden mt-3">
             <div className="relative">
               <input
@@ -213,21 +226,21 @@ export default function StoreLayout() {
         <nav className="hidden md:block bg-[#116b3b]">
           <div className="max-w-7xl mx-auto px-4 flex items-center gap-2 py-2">
 
-            <Link to="/" className="text-white px-5 py-2 rounded-lg hover:bg-white/10 font-bold text-sm">
+            <Link to="/" className="text-white px-4 py-2 rounded-lg hover:bg-white/10 font-bold text-sm">
               🏠 الرئيسية
             </Link>
 
-            <Link to="/products" className="text-white px-5 py-2 rounded-lg hover:bg-white/10 font-bold text-sm">
-              🌿 تسوق النباتات
+            <Link to="/#products" className="text-white px-4 py-2 rounded-lg hover:bg-white/10 font-bold text-sm">
+              🛒 تسوق الآن
             </Link>
 
-            <a href="/#best-sellers" className="text-white px-5 py-2 rounded-lg hover:bg-white/10 font-bold text-sm">
+            <Link to="/#best-sellers" className="text-white px-4 py-2 rounded-lg hover:bg-white/10 font-bold text-sm">
               ⭐ الأكثر مبيعاً
-            </a>
+            </Link>
 
-            <a href="/#design" className="text-white px-5 py-2 rounded-lg hover:bg-white/10 font-bold text-sm">
-              🎨 صمم مساحتك
-            </a>
+            <Link to="/#design" className="text-white px-4 py-2 rounded-lg hover:bg-white/10 font-bold text-sm">
+              🎨 صمم الآن
+            </Link>
 
           </div>
         </nav>
@@ -236,16 +249,17 @@ export default function StoreLayout() {
         {mobileMenu && (
           <div className="md:hidden bg-white border-t border-green-100 shadow-xl p-4 space-y-2">
 
-            {navLink('/', 'الرئيسية', '🏠')}
-            {navLink('/products', 'تسوق النباتات', '🌿')}
-            {navLink('/cart', 'سلة المشتريات', '🛒')}
-            {navLink('/#best-sellers', 'الأكثر مبيعاً', '⭐')}
-            {navLink('/#design', 'صمم مساحتك', '🎨')}
+            {menuLink('/', 'الرئيسية', '🏠')}
+            {menuLink('/#products', 'تسوق الآن', '🛒')}
+            {menuLink('/#best-sellers', 'الأكثر مبيعاً', '⭐')}
+            {menuLink('/#design', 'صمم الآن', '🎨')}
+            {menuLink('/products', 'كل المنتجات', '🌿')}
+            {menuLink('/cart', 'سلة المشتريات', '🛍️')}
 
-            {/* Admin visible on mobile */}
             {isAdmin && (
               <Link
                 to="/admin"
+                onClick={() => setMobileMenu(false)}
                 className="flex items-center justify-between bg-[#0a3824] text-white p-4 rounded-xl font-black shadow-md"
               >
                 <span>⚙️ لوحة تحكم الإدارة</span>
@@ -268,7 +282,7 @@ export default function StoreLayout() {
       </header>
 
       {/* Main */}
-      <main className="flex-1">
+      <main className="flex-1 pb-20 md:pb-0">
         <Outlet />
       </main>
 
@@ -281,7 +295,7 @@ export default function StoreLayout() {
             <h3 className="text-3xl font-black text-white mb-3">
               🌿 Verda
             </h3>
-            <p className="text-sm leading-7 text-gray-300">
+            <p className="text-sm leading-7">
               مساحتك الخضراء تبدأ من هنا. نباتات مختارة بعناية وأفكار تلهمك تضيف لمسة طبيعية لكل مكان.
             </p>
           </div>
@@ -321,8 +335,9 @@ export default function StoreLayout() {
 
       </footer>
 
-      {/* Mobile bottom navigation */}
-      <div className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-200 shadow-[0_-4px_15px_rgba(0,0,0,0.08)]">
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-200 shadow-lg">
+
         <div className="grid grid-cols-4 py-2">
 
           <Link to="/" className="flex flex-col items-center gap-1 text-green-800 text-xs">
@@ -330,9 +345,9 @@ export default function StoreLayout() {
             الرئيسية
           </Link>
 
-          <Link to="/products" className="flex flex-col items-center gap-1 text-gray-600 text-xs">
+          <Link to="/#products" className="flex flex-col items-center gap-1 text-gray-600 text-xs">
             <span className="text-xl">🌿</span>
-            المنتجات
+            تسوق
           </Link>
 
           <Link to="/cart" className="relative flex flex-col items-center gap-1 text-gray-600 text-xs">
