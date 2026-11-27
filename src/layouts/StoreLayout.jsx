@@ -1,4 +1,4 @@
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { cartService } from '../services/cartService';
 
@@ -6,6 +6,7 @@ export default function StoreLayout() {
   const [user, setUser] = useState(null);
   const [cartCount, setCartCount] = useState(0);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -28,16 +29,14 @@ export default function StoreLayout() {
   }, [location.pathname]);
 
   const logout = () => {
-    if (confirm('تسجيل الخروج؟')) {
-      localStorage.clear();
-      window.location.href = '/login';
-    }
+    localStorage.clear();
+    navigate('/login');
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f8faf9]">
       {/* Topbar */}
-      <div className="bg-[#0a2e1f] text-white text-center py-2 text-xs font-semibold">
+      <div className="bg-[#0a2e1f] text-white text-center py-1.5 text-[10px] sm:text-xs font-semibold">
         🌿 توصيل آمن لجميع نباتاتك — أضف لمسة خضراء لحياتك
       </div>
 
@@ -49,66 +48,66 @@ export default function StoreLayout() {
           <Link to="/" className="flex items-center gap-2 shrink-0">
             <div className="text-3xl text-[#4ade80]">🌿</div>
             <div>
-              <h1 className="text-2xl font-bold text-white tracking-wide">Verda</h1>
-              <p className="text-[8px] text-[#4ade80] font-bold tracking-widest">LIVE GREEN .. LIVE BETTER</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-white tracking-wide">Verda</h1>
+              <p className="text-[7px] sm:text-[8px] text-[#4ade80] font-bold tracking-widest">LIVE GREEN .. LIVE BETTER</p>
             </div>
           </Link>
 
-          {/* Search Bar */}
+          {/* Search Bar - Desktop */}
           <div className="flex-1 max-w-2xl hidden md:block">
             <div className="relative">
               <input
                 type="text"
                 placeholder="ابحث عن منتج..."
-                className="w-full px-5 py-2.5 pr-12 rounded-full text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#4ade80]"
+                className="w-full px-5 py-2 pr-12 rounded-full text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#4ade80]"
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
             </div>
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-4 text-white">
-            {/* Account */}
-            <div className="hidden sm:flex items-center gap-2 cursor-pointer hover:text-[#4ade80] transition">
-              <span className="text-2xl">👤</span>
-              <div className="text-xs">
-                {user ? (
-                  <span className="font-bold">{user.fullName}</span>
-                ) : (
-                  <Link to="/login">تسجيل الدخول</Link>
-                )}
-              </div>
-            </div>
+          <div className="flex items-center gap-3 sm:gap-5 text-white text-xs">
+            
+            {/* Profile Link (user icon) */}
+            <Link to={user ? "/profile" : "/login"} className="flex flex-col items-center gap-1 hover:text-[#4ade80] transition">
+              <span className="text-xl sm:text-2xl">👤</span>
+              <span className="hidden sm:block">{user ? user.fullName.split(' ')[0] : 'حسابي'}</span>
+            </Link>
 
-            {/* Wishlist */}
-            <Link to="/wishlist" className="flex items-center gap-2 hover:text-[#4ade80] transition">
-              <span className="text-2xl">❤️</span>
-              <span className="text-xs hidden sm:block">المفضلة</span>
+            {/* Wishlist (Best Sellers) */}
+            <Link to="/#best-sellers" className="flex flex-col items-center gap-1 hover:text-[#4ade80] transition">
+              <span className="text-xl sm:text-2xl">❤️</span>
+              <span className="hidden sm:block">المفضلة</span>
             </Link>
 
             {/* Cart */}
-            <Link to="/cart" className="flex items-center gap-2 hover:text-[#4ade80] transition relative">
-              <span className="text-2xl">🛒</span>
-              <span className="text-xs hidden sm:block">السلة</span>
+            <Link to="/cart" className="flex flex-col items-center gap-1 hover:text-[#4ade80] transition relative">
+              <span className="text-xl sm:text-2xl">🛒</span>
+              <span className="hidden sm:block">السلة</span>
               {cartCount > 0 && (
-                <span className="absolute -top-2 -left-2 bg-[#4ade80] text-[#0a2e1f] text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -left-1 bg-[#4ade80] text-[#0a2e1f] text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
                   {cartCount}
                 </span>
               )}
             </Link>
 
-            {/* Admin Link */}
-            {user && ['Admin', 'StoreManager'].includes(user.role) && (
-              <Link to="/admin" className="bg-white/10 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-white/20 transition hidden lg:block">
-                لوحة التحكم
-              </Link>
+            {/* Admin / Logout (only if logged in) */}
+            {user ? (
+              <div className="flex flex-col items-center gap-1">
+                {['Admin', 'StoreManager'].includes(user.role) && (
+                  <Link to="/admin" className="bg-white/10 px-2 py-1 rounded-md text-[10px] hover:bg-white/20 transition hidden sm:block">لوحة التحكم</Link>
+                )}
+                <button onClick={logout} className="text-[10px] text-red-300 hover:text-red-100">خروج</button>
+              </div>
+            ) : (
+              <Link to="/login" className="bg-white/10 px-3 py-1.5 rounded-lg hover:bg-white/20 transition">دخول</Link>
             )}
           </div>
         </div>
 
         {/* Navigation Bar */}
         <div className="bg-[#15803d] border-t border-[#0f3d29]">
-          <div className="max-w-7xl mx-auto px-4 flex items-center gap-6 py-2 overflow-x-auto no-scrollbar text-sm font-bold text-white/90">
+          <div className="max-w-7xl mx-auto px-4 flex items-center gap-6 py-2 overflow-x-auto no-scrollbar text-[11px] sm:text-sm font-bold text-white/90">
             <Link to="/" className="hover:text-white whitespace-nowrap flex items-center gap-1">
               <span>🏠</span> الرئيسية
             </Link>
@@ -116,22 +115,21 @@ export default function StoreLayout() {
               <span>📦</span> الأقسام
             </Link>
             <a href="/#offers" className="hover:text-white whitespace-nowrap flex items-center gap-1">
-              <span>🏷️</span> العروض والخصومات
+              <span>🏷️</span> العروض
             </a>
-            <a href="/#best" className="hover:text-white whitespace-nowrap flex items-center gap-1">
+            <a href="/#best-sellers" className="hover:text-white whitespace-nowrap flex items-center gap-1">
               <span>⭐</span> الأكثر مبيعاً
             </a>
             <a href="/#about" className="hover:text-white whitespace-nowrap flex items-center gap-1">
               <span>ℹ️</span> من نحن
             </a>
-            <a href="/#contact" className="hover:text-white whitespace-nowrap flex items-center gap-1">
-              <span>🎧</span> تواصل معنا
-            </a>
+            <Link to="/design" className="hover:text-white whitespace-nowrap flex items-center gap-1">
+              <span>🎨</span> صمّم مساحتك
+            </Link>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="flex-1">
         <Outlet />
       </main>
