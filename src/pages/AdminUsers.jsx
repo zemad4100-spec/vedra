@@ -26,8 +26,16 @@ export default function AdminUsers() {
         api.get('/admin/users'),
         api.get('/admin/users/roles'),
       ]);
-      // الباك إند بقى بيبعت المستخدمين (من غير العملاء)، فمش محتاجين نفلتر هنا
-      setUsers(usersRes.data.data || []);
+      
+      // ✅ الفلترة القوية: بنشيل أي مستخدم دوره "Customer" (بأي شكل) أو roleId = 8
+      const allUsers = usersRes.data.data || [];
+      const nonCustomerUsers = allUsers.filter(u => {
+        // تحويل الـ role لـ lowercase عشان نمسك أي شكل (Customer / customer / CUSTOMER)
+        const roleName = (u.role || '').toLowerCase();
+        return roleName !== 'customer' && u.roleId !== 8;
+      });
+      
+      setUsers(nonCustomerUsers);
       setRoles(rolesRes.data.data || []);
     } catch (err) {
       console.error(err);
@@ -165,7 +173,6 @@ export default function AdminUsers() {
                     <td className="p-4 text-center">
                       <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
                         u.role === 'Admin' ? 'bg-red-100 text-red-700 border-red-200' : 
-                        u.role === 'Customer' ? 'bg-green-100 text-green-700 border-green-200' : 
                         'bg-blue-100 text-blue-700 border-blue-200'
                       }`}>
                         {u.role}

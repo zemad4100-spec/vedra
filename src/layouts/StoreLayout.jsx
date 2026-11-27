@@ -7,13 +7,11 @@ export default function StoreLayout() {
   const [cartCount, setCartCount] = useState(0);
   const location = useLocation();
 
-  // جلب بيانات المستخدم والسلة
   useEffect(() => {
     const userData = localStorage.getItem('user');
     if (userData) setUser(JSON.parse(userData));
   }, []);
 
-  // تحديث عدد السلة كل ما الصفحة تتغير
   useEffect(() => {
     const fetchCartCount = async () => {
       const sessionId = localStorage.getItem('sessionId');
@@ -37,60 +35,98 @@ export default function StoreLayout() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-brand-cream">
+    <div className="min-h-screen flex flex-col bg-[#f8faf9]">
       {/* Topbar */}
-      <div className="bg-brand-dark text-white text-center py-2 text-sm font-semibold">
-        🌿 أضف لمسة خضراء لحياتك — <strong className="text-brand-sand">توصيل آمن لجميع نباتاتك</strong>
+      <div className="bg-[#0a2e1f] text-white text-center py-2 text-xs font-semibold">
+        🌿 توصيل آمن لجميع نباتاتك — أضف لمسة خضراء لحياتك
       </div>
 
       {/* Header */}
-      <header className="bg-brand-cream sticky top-0 z-40 border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-brand-dark text-brand-sand rounded-xl flex items-center justify-center text-2xl font-serif">
-              ❧
-            </div>
+      <header className="bg-[#0f3d29] sticky top-0 z-40 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+          
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2 shrink-0">
+            <div className="text-3xl text-[#4ade80]">🌿</div>
             <div>
-              <h1 className="text-2xl font-serif font-bold text-brand-dark">Verda</h1>
-              <p className="text-[10px] text-gray-500 font-bold tracking-widest">
-                LANDSCAPE & GREEN SPACES
-              </p>
+              <h1 className="text-2xl font-bold text-white tracking-wide">Verda</h1>
+              <p className="text-[8px] text-[#4ade80] font-bold tracking-widest">LIVE GREEN .. LIVE BETTER</p>
             </div>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-8 font-bold text-gray-700">
-            <Link to="/" className="hover:text-brand-main">الرئيسية</Link>
-            <a href="/#products" className="hover:text-brand-main">تسوق النباتات</a>
-            <a href="/#design" className="hover:text-brand-main">صمّم مساحتك</a>
-          </nav>
+          {/* Search Bar */}
+          <div className="flex-1 max-w-2xl hidden md:block">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="ابحث عن منتج..."
+                className="w-full px-5 py-2.5 pr-12 rounded-full text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#4ade80]"
+              />
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+            </div>
+          </div>
 
-          <div className="flex items-center gap-3">
-            {user ? (
-              <>
-                {['Admin', 'StoreManager'].includes(user.role) && (
-                  <Link to="/admin" className="bg-brand-dark text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-brand-main transition">
-                    🛠️ لوحة التحكم
-                  </Link>
+          {/* Actions */}
+          <div className="flex items-center gap-4 text-white">
+            {/* Account */}
+            <div className="hidden sm:flex items-center gap-2 cursor-pointer hover:text-[#4ade80] transition">
+              <span className="text-2xl">👤</span>
+              <div className="text-xs">
+                {user ? (
+                  <span className="font-bold">{user.fullName}</span>
+                ) : (
+                  <Link to="/login">تسجيل الدخول</Link>
                 )}
-                <button onClick={logout} className="bg-red-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-red-700 transition">
-                  تسجيل الخروج
-                </button>
-              </>
-            ) : (
-              <Link to="/login" className="bg-brand-dark text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-brand-main transition">
-                تسجيل الدخول
-              </Link>
-            )}
+              </div>
+            </div>
 
-            {/* Cart Icon - مربوط دلوقتي */}
-            <Link to="/cart" className="w-11 h-11 bg-white border border-gray-200 rounded-xl flex items-center justify-center text-xl relative hover:bg-brand-cream transition">
-              🛒
+            {/* Wishlist */}
+            <Link to="/wishlist" className="flex items-center gap-2 hover:text-[#4ade80] transition">
+              <span className="text-2xl">❤️</span>
+              <span className="text-xs hidden sm:block">المفضلة</span>
+            </Link>
+
+            {/* Cart */}
+            <Link to="/cart" className="flex items-center gap-2 hover:text-[#4ade80] transition relative">
+              <span className="text-2xl">🛒</span>
+              <span className="text-xs hidden sm:block">السلة</span>
               {cartCount > 0 && (
-                <span className="absolute -top-1 -left-1 bg-brand-sand text-brand-dark text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                <span className="absolute -top-2 -left-2 bg-[#4ade80] text-[#0a2e1f] text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
                   {cartCount}
                 </span>
               )}
             </Link>
+
+            {/* Admin Link */}
+            {user && ['Admin', 'StoreManager'].includes(user.role) && (
+              <Link to="/admin" className="bg-white/10 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-white/20 transition hidden lg:block">
+                لوحة التحكم
+              </Link>
+            )}
+          </div>
+        </div>
+
+        {/* Navigation Bar */}
+        <div className="bg-[#15803d] border-t border-[#0f3d29]">
+          <div className="max-w-7xl mx-auto px-4 flex items-center gap-6 py-2 overflow-x-auto no-scrollbar text-sm font-bold text-white/90">
+            <Link to="/" className="hover:text-white whitespace-nowrap flex items-center gap-1">
+              <span>🏠</span> الرئيسية
+            </Link>
+            <Link to="/products" className="hover:text-white whitespace-nowrap flex items-center gap-1">
+              <span>📦</span> الأقسام
+            </Link>
+            <a href="/#offers" className="hover:text-white whitespace-nowrap flex items-center gap-1">
+              <span>🏷️</span> العروض والخصومات
+            </a>
+            <a href="/#best" className="hover:text-white whitespace-nowrap flex items-center gap-1">
+              <span>⭐</span> الأكثر مبيعاً
+            </a>
+            <a href="/#about" className="hover:text-white whitespace-nowrap flex items-center gap-1">
+              <span>ℹ️</span> من نحن
+            </a>
+            <a href="/#contact" className="hover:text-white whitespace-nowrap flex items-center gap-1">
+              <span>🎧</span> تواصل معنا
+            </a>
           </div>
         </div>
       </header>
@@ -101,37 +137,35 @@ export default function StoreLayout() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-brand-dark text-gray-300 py-16 mt-16">
+      <footer className="bg-[#0a2e1f] text-gray-300 py-12 mt-16">
         <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-4 gap-8">
           <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-brand-sand text-brand-dark rounded-xl flex items-center justify-center text-xl font-serif">
-                ❧
-              </div>
-              <h3 className="text-xl font-serif font-bold text-white">Verda</h3>
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-2xl text-[#4ade80]">🌿</span>
+              <h3 className="text-xl font-bold text-white">Verda</h3>
             </div>
-            <p className="text-sm leading-loose">
+            <p className="text-sm leading-relaxed">
               مساحتك الخضراء تبدأ من هنا. نباتات مختارة بعناية، وأفكار تلهمك تضيف لمسة طبيعية لكل مكان.
             </p>
           </div>
           <div>
-            <h4 className="text-lg font-bold text-white mb-4">روابط سريعة</h4>
+            <h4 className="text-white font-bold mb-4">روابط سريعة</h4>
             <ul className="space-y-2 text-sm">
-              <li><Link to="/" className="hover:text-brand-sand">الرئيسية</Link></li>
-              <li><a href="/#products" className="hover:text-brand-sand">تسوق النباتات</a></li>
-              <li><a href="/#design" className="hover:text-brand-sand">تصميم المساحات</a></li>
+              <li><Link to="/" className="hover:text-[#4ade80]">الرئيسية</Link></li>
+              <li><Link to="/products" className="hover:text-[#4ade80]">تسوق النباتات</Link></li>
+              <li><Link to="/design" className="hover:text-[#4ade80]">تصميم المساحات</Link></li>
             </ul>
           </div>
           <div>
-            <h4 className="text-lg font-bold text-white mb-4">خدمة العملاء</h4>
+            <h4 className="text-white font-bold mb-4">خدمة العملاء</h4>
             <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-brand-sand">سياسة الشحن</a></li>
-              <li><a href="#" className="hover:text-brand-sand">الاستبدال والاسترجاع</a></li>
-              <li><a href="#" className="hover:text-brand-sand">الأسئلة الشائعة</a></li>
+              <li><a href="#" className="hover:text-[#4ade80]">سياسة الشحن</a></li>
+              <li><a href="#" className="hover:text-[#4ade80]">الاستبدال والاسترجاع</a></li>
+              <li><a href="#" className="hover:text-[#4ade80]">الأسئلة الشائعة</a></li>
             </ul>
           </div>
           <div>
-            <h4 className="text-lg font-bold text-white mb-4">تواصل معنا</h4>
+            <h4 className="text-white font-bold mb-4">تواصل معنا</h4>
             <ul className="space-y-2 text-sm">
               <li>📞 0100 000 0000</li>
               <li>✉️ hello@verda.example</li>
@@ -139,7 +173,7 @@ export default function StoreLayout() {
             </ul>
           </div>
         </div>
-        <div className="border-t border-gray-700 mt-10 pt-6 text-center text-sm text-gray-500">
+        <div className="border-t border-[#15803d] mt-10 pt-6 text-center text-sm text-gray-500">
           © {new Date().getFullYear()} Verda — جميع الحقوق محفوظة
         </div>
       </footer>
