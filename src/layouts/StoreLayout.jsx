@@ -68,17 +68,11 @@ export default function StoreLayout() {
           {/* Actions */}
           <div className="flex items-center gap-3 sm:gap-5 text-white text-xs">
             
-            {/* Profile Link (user icon) */}
-            <Link to={user ? "/profile" : "/login"} className="flex flex-col items-center gap-1 hover:text-[#4ade80] transition">
-              <span className="text-xl sm:text-2xl">👤</span>
-              <span className="hidden sm:block">{user ? user.fullName.split(' ')[0] : 'حسابي'}</span>
-            </Link>
-
             {/* Wishlist (Best Sellers) */}
-            <Link to="/#best-sellers" className="flex flex-col items-center gap-1 hover:text-[#4ade80] transition">
+            <a href="/#best-sellers" className="flex flex-col items-center gap-1 hover:text-[#4ade80] transition">
               <span className="text-xl sm:text-2xl">❤️</span>
               <span className="hidden sm:block">المفضلة</span>
-            </Link>
+            </a>
 
             {/* Cart */}
             <Link to="/cart" className="flex flex-col items-center gap-1 hover:text-[#4ade80] transition relative">
@@ -111,21 +105,15 @@ export default function StoreLayout() {
             <Link to="/" className="hover:text-white whitespace-nowrap flex items-center gap-1">
               <span>🏠</span> الرئيسية
             </Link>
-            <Link to="/products" className="hover:text-white whitespace-nowrap flex items-center gap-1">
+            <a href="/#categories" className="hover:text-white whitespace-nowrap flex items-center gap-1">
               <span>📦</span> الأقسام
-            </Link>
-            <a href="/#offers" className="hover:text-white whitespace-nowrap flex items-center gap-1">
-              <span>🏷️</span> العروض
             </a>
             <a href="/#best-sellers" className="hover:text-white whitespace-nowrap flex items-center gap-1">
               <span>⭐</span> الأكثر مبيعاً
             </a>
-            <a href="/#about" className="hover:text-white whitespace-nowrap flex items-center gap-1">
-              <span>ℹ️</span> من نحن
-            </a>
-            <Link to="/design" className="hover:text-white whitespace-nowrap flex items-center gap-1">
+            <a href="/#design" className="hover:text-white whitespace-nowrap flex items-center gap-1">
               <span>🎨</span> صمّم مساحتك
-            </Link>
+            </a>
           </div>
         </div>
       </header>

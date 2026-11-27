@@ -8,6 +8,7 @@ export default function StoreHome() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,6 +46,11 @@ export default function StoreHome() {
     }
   };
 
+  // فلترة المنتجات حسب القسم المختار
+  const filteredProducts = selectedCategory 
+    ? products.filter(p => p.categoryId === selectedCategory)
+    : products;
+
   return (
     <div className="bg-[#f8faf9]">
       
@@ -79,40 +85,58 @@ export default function StoreHome() {
         </div>
       </section>
 
-      {/* Categories (All) */}
-      <section className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-4">
+      {/* Categories (Click to filter) */}
+      <section id="categories" className="max-w-7xl mx-auto px-4 py-8">
+        <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-bold text-[#0a2e1f]">تسوق حسب الأقسام</h2>
+          {selectedCategory && (
+            <button 
+              onClick={() => setSelectedCategory(null)}
+              className="text-sm text-[#15803d] hover:underline font-bold"
+            >
+              عرض الكل ✕
+            </button>
+          )}
         </div>
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
           {categories.map(cat => (
-            <Link 
+            <button 
               key={cat.id} 
-              to={`/category/${cat.id}`}
-              className="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-2 hover:shadow-md transition group"
+              onClick={() => setSelectedCategory(cat.id)}
+              className={`p-3 rounded-2xl shadow-sm border flex flex-col items-center justify-center gap-2 transition ${
+                selectedCategory === cat.id 
+                  ? 'bg-[#15803d] border-[#15803d] text-white' 
+                  : 'bg-white border-gray-100 text-[#0a2e1f] hover:shadow-md'
+              }`}
             >
-              <div className="w-12 h-12 bg-[#f0fdf4] text-[#15803d] rounded-full flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${
+                selectedCategory === cat.id ? 'bg-white/20 text-white' : 'bg-[#f0fdf4] text-[#15803d]'
+              }`}>
                 🌱
               </div>
-              <h3 className="font-bold text-xs text-[#0a2e1f] text-center">{cat.nameAr}</h3>
-            </Link>
+              <h3 className="font-bold text-xs text-center">{cat.nameAr}</h3>
+            </button>
           ))}
         </div>
       </section>
 
-      {/* Best Sellers Section */}
+      {/* Products Section (Best Sellers or Filtered) */}
       <section id="best-sellers" className="max-w-7xl mx-auto px-4 py-12">
         <div className="bg-[#15803d] rounded-t-2xl p-4 flex items-center gap-2">
           <span className="text-xl text-[#ffc107]">⭐</span>
-          <h2 className="text-xl font-bold text-white">الأكثر مبيعاً</h2>
+          <h2 className="text-xl font-bold text-white">
+            {selectedCategory ? 'منتجات القسم' : 'الأكثر مبيعاً'}
+          </h2>
         </div>
         
         <div className="bg-white p-4 sm:p-6 rounded-b-2xl shadow-sm border border-gray-100">
           {loading ? (
             <p className="text-center text-gray-500 py-10">جاري التحميل...</p>
+          ) : filteredProducts.length === 0 ? (
+            <p className="text-center text-gray-500 py-10">لا توجد منتجات في هذا القسم</p>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-              {products.slice(0, 4).map(p => (
+              {filteredProducts.map(p => (
                 <div key={p.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition group relative">
                   <Link to={`/product/${p.id}`} className="block h-40 sm:h-56 bg-gray-50 overflow-hidden relative">
                     <img
@@ -145,7 +169,7 @@ export default function StoreHome() {
       </section>
 
       {/* Design Request Section */}
-      <section className="max-w-7xl mx-auto px-4 py-12">
+      <section id="design" className="max-w-7xl mx-auto px-4 py-12">
         <div className="bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-gray-100">
           <div className="text-center mb-8">
             <h2 className="text-2xl md:text-3xl font-bold text-[#0a2e1f]">صمّم مساحتك الخضراء</h2>
