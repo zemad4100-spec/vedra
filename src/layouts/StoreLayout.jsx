@@ -85,7 +85,7 @@ export default function StoreLayout() {
               )}
             </Link>
 
-            {/* Admin / Logout (only if logged in) */}
+            {/* Login / Admin */}
             {user ? (
               <div className="flex flex-col items-center gap-1">
                 {['Admin', 'StoreManager'].includes(user.role) && (
@@ -105,9 +105,6 @@ export default function StoreLayout() {
             <Link to="/" className="hover:text-white whitespace-nowrap flex items-center gap-1">
               <span>🏠</span> الرئيسية
             </Link>
-            <a href="/#categories" className="hover:text-white whitespace-nowrap flex items-center gap-1">
-              <span>📦</span> الأقسام
-            </a>
             <a href="/#best-sellers" className="hover:text-white whitespace-nowrap flex items-center gap-1">
               <span>⭐</span> الأكثر مبيعاً
             </a>

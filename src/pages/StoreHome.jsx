@@ -6,19 +6,13 @@ import { showSuccess, showError } from '../utils/toast';
 export default function StoreHome() {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [prodRes, catRes] = await Promise.all([
-          api.get('/products', { params: { pageSize: 20 } }),
-          api.get('/categories'),
-        ]);
+        const prodRes = await api.get('/products', { params: { pageSize: 20 } });
         setProducts(prodRes.data.data.items || []);
-        setCategories(catRes.data.data || []);
       } catch (err) {
         console.error(err);
       } finally {
@@ -45,11 +39,6 @@ export default function StoreHome() {
       showError(msg);
     }
   };
-
-  // فلترة المنتجات حسب القسم المختار
-  const filteredProducts = selectedCategory 
-    ? products.filter(p => p.categoryId === selectedCategory)
-    : products;
 
   return (
     <div className="bg-[#f8faf9]">
@@ -85,58 +74,58 @@ export default function StoreHome() {
         </div>
       </section>
 
-      {/* Categories (Click to filter) */}
-      <section id="categories" className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-[#0a2e1f]">تسوق حسب الأقسام</h2>
-          {selectedCategory && (
-            <button 
-              onClick={() => setSelectedCategory(null)}
-              className="text-sm text-[#15803d] hover:underline font-bold"
-            >
-              عرض الكل ✕
-            </button>
-          )}
+      {/* Features Section (بدل الأقسام) */}
+      <section className="max-w-7xl mx-auto px-4 py-12">
+        <div className="text-center mb-10">
+          <h2 className="text-2xl md:text-3xl font-bold text-[#0a2e1f]">لماذا تختار Verda؟</h2>
+          <p className="text-gray-500 mt-2 text-sm">إحنا بنهتم بأدق التفاصيل عشان نقدملك أفضل تجربة خضراء</p>
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-          {categories.map(cat => (
-            <button 
-              key={cat.id} 
-              onClick={() => setSelectedCategory(cat.id)}
-              className={`p-3 rounded-2xl shadow-sm border flex flex-col items-center justify-center gap-2 transition ${
-                selectedCategory === cat.id 
-                  ? 'bg-[#15803d] border-[#15803d] text-white' 
-                  : 'bg-white border-gray-100 text-[#0a2e1f] hover:shadow-md'
-              }`}
-            >
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${
-                selectedCategory === cat.id ? 'bg-white/20 text-white' : 'bg-[#f0fdf4] text-[#15803d]'
-              }`}>
-                🌱
-              </div>
-              <h3 className="font-bold text-xs text-center">{cat.nameAr}</h3>
-            </button>
-          ))}
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center hover:shadow-md transition">
+            <div className="w-16 h-16 mx-auto bg-[#f0fdf4] text-[#15803d] rounded-full flex items-center justify-center text-3xl mb-4">
+              🌿
+            </div>
+            <h3 className="font-bold text-[#0a2e1f] mb-2">نباتات طبيعية 100%</h3>
+            <p className="text-gray-500 text-sm">جميع نباتاتنا مختارة بعناية من أفضل المشاتل المحلية والعالمية.</p>
+          </div>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center hover:shadow-md transition">
+            <div className="w-16 h-16 mx-auto bg-[#f0fdf4] text-[#15803d] rounded-full flex items-center justify-center text-3xl mb-4">
+              🚚
+            </div>
+            <h3 className="font-bold text-[#0a2e1f] mb-2">توصيل سريع وآمن</h3>
+            <p className="text-gray-500 text-sm">بنوصل نباتاتك بأمان لحد باب البيت مع تغليف مخصص يحميها.</p>
+          </div>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center hover:shadow-md transition">
+            <div className="w-16 h-16 mx-auto bg-[#f0fdf4] text-[#15803d] rounded-full flex items-center justify-center text-3xl mb-4">
+              💎
+            </div>
+            <h3 className="font-bold text-[#0a2e1f] mb-2">جودة تستاهل</h3>
+            <p className="text-gray-500 text-sm">بنضمن لك جودة كل نبات، ولو مش عاجبك، إحنا بنستبدله فوراً.</p>
+          </div>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center hover:shadow-md transition">
+            <div className="w-16 h-16 mx-auto bg-[#f0fdf4] text-[#15803d] rounded-full flex items-center justify-center text-3xl mb-4">
+              🎨
+            </div>
+            <h3 className="font-bold text-[#0a2e1f] mb-2">تصميم مساحات</h3>
+            <p className="text-gray-500 text-sm">فريقنا جاهز يساعدك تصمم مساحتك الخضراء بأحدث الأفكار.</p>
+          </div>
         </div>
       </section>
 
-      {/* Products Section (Best Sellers or Filtered) */}
+      {/* Best Sellers Section */}
       <section id="best-sellers" className="max-w-7xl mx-auto px-4 py-12">
         <div className="bg-[#15803d] rounded-t-2xl p-4 flex items-center gap-2">
           <span className="text-xl text-[#ffc107]">⭐</span>
-          <h2 className="text-xl font-bold text-white">
-            {selectedCategory ? 'منتجات القسم' : 'الأكثر مبيعاً'}
-          </h2>
+          <h2 className="text-xl font-bold text-white">الأكثر مبيعاً</h2>
         </div>
         
         <div className="bg-white p-4 sm:p-6 rounded-b-2xl shadow-sm border border-gray-100">
           {loading ? (
             <p className="text-center text-gray-500 py-10">جاري التحميل...</p>
-          ) : filteredProducts.length === 0 ? (
-            <p className="text-center text-gray-500 py-10">لا توجد منتجات في هذا القسم</p>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-              {filteredProducts.map(p => (
+              {products.slice(0, 8).map(p => (
                 <div key={p.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition group relative">
                   <Link to={`/product/${p.id}`} className="block h-40 sm:h-56 bg-gray-50 overflow-hidden relative">
                     <img
