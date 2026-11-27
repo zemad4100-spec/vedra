@@ -1,8 +1,20 @@
-
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import { showSuccess, showError } from '../utils/toast';
+
+// توحيد النص العربي لتسهيل البحث
+const normalizeText = (value) => {
+  return String(value || '')
+    .toLocaleLowerCase()
+    .trim()
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/ى/g, 'ي')
+    .replace(/ة/g, 'ه')
+    .replace(/ـ/g, '')
+    .replace(/[\u064B-\u065F\u0670]/g, '')
+    .replace(/\s+/g, ' ');
+};
 
 export default function StoreHome() {
   const navigate = useNavigate();
@@ -12,29 +24,33 @@ export default function StoreHome() {
   const [loading, setLoading] = useState(true);
   const [addingId, setAddingId] = useState(null);
 
-  const searchTerm = (searchParams.get('search') || '')
-    .trim()
-    .toLocaleLowerCase();
+  const rawSearchTerm = searchParams.get('search') || '';
+  const searchTerm = normalizeText(rawSearchTerm);
 
-  // البحث في المنتجات المحملة
-  const filteredProducts = products.filter((p) => {
-    if (!searchTerm) return true;
+  const filteredProducts = useMemo(() => {
+    if (!searchTerm) return products;
 
-    const searchableNames = [
-      p.nameAr,
-      p.name,
-      p.nameEn,
-      p.description
-    ];
+    return products.filter((p) => {
+      const searchableFields = [
+        p.nameAr,
+        p.name,
+        p.nameEn,
+        p.sku,
+        p.description,
+        p.descriptionAr,
+        p.descriptionEn,
+        p.shortDescAr,
+        p.shortDescEn,
+        p.categoryNameAr,
+        p.categoryNameEn
+      ];
 
-    return searchableNames
-      .filter(Boolean)
-      .some(name =>
-        String(name).toLocaleLowerCase().includes(searchTerm)
+      return searchableFields.some((field) =>
+        normalizeText(field).includes(searchTerm)
       );
-  });
+    });
+  }, [products, searchTerm]);
 
-  // عند وجود بحث نعرض كل النتائج، وبدون بحث نعرض 8 منتجات
   const displayedProducts = searchTerm
     ? filteredProducts
     : filteredProducts.slice(0, 8);
@@ -46,27 +62,36 @@ export default function StoreHome() {
     });
   };
 
-  // تحميل المنتجات
   useEffect(() => {
+    let cancelled = false;
+
     const fetchData = async () => {
+      setLoading(true);
+
       try {
         const res = await api.get('/products', {
           params: { pageSize: 100 }
         });
 
-        setProducts(res.data?.data?.items || []);
+        if (!cancelled) {
+          const items = res.data?.data?.items || [];
+          setProducts(items);
+        }
       } catch (err) {
         console.error('Products Error:', err);
-        showError('تعذر تحميل المنتجات');
+        if (!cancelled) showError('تعذر تحميل المنتجات');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchData();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // الإضافة إلى السلة
   const handleAddToCart = async (productId) => {
     if (addingId !== null) return;
 
@@ -179,7 +204,6 @@ export default function StoreHome() {
               </p>
 
               <div className="flex flex-wrap gap-3">
-
                 <button
                   onClick={() => scrollToSection('products')}
                   className="bg-yellow-400 hover:bg-yellow-300 text-green-950 px-7 py-3.5 rounded-xl font-black shadow-lg transition"
@@ -193,7 +217,6 @@ export default function StoreHome() {
                 >
                   🎨 صمم الآن
                 </button>
-
               </div>
             </div>
           </div>
@@ -203,7 +226,6 @@ export default function StoreHome() {
       {/* Categories */}
       <section className="max-w-7xl mx-auto px-3 sm:px-5 py-7">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-
           {categories.map((item, index) => (
             <button
               key={index}
@@ -216,13 +238,11 @@ export default function StoreHome() {
               </span>
             </button>
           ))}
-
         </div>
       </section>
 
       {/* Features */}
       <section className="max-w-7xl mx-auto px-3 sm:px-5 py-8">
-
         <div className="text-center mb-7">
           <span className="text-green-700 font-bold text-sm">
             WHY VERDA?
@@ -238,7 +258,6 @@ export default function StoreHome() {
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
-
           {features.map((item, index) => (
             <div
               key={index}
@@ -257,7 +276,6 @@ export default function StoreHome() {
               </p>
             </div>
           ))}
-
         </div>
       </section>
 
@@ -266,12 +284,10 @@ export default function StoreHome() {
         id="products"
         className="max-w-7xl mx-auto px-3 sm:px-5 py-8 scroll-mt-36"
       >
-
         <div
           id="best-sellers"
           className="flex items-center justify-between gap-3 mb-5 scroll-mt-36"
         >
-
           <div>
             <span className="text-green-700 text-xs font-bold">
               {searchTerm ? 'SEARCH RESULTS' : 'OUR PRODUCTS'}
@@ -279,7 +295,7 @@ export default function StoreHome() {
 
             <h2 className="text-xl sm:text-3xl font-black text-[#0a3824]">
               {searchTerm
-                ? `نتائج البحث عن: ${searchParams.get('search')}`
+                ? `نتائج البحث عن: ${rawSearchTerm}`
                 : '⭐ الأكثر مبيعاً'}
             </h2>
 
@@ -303,13 +319,10 @@ export default function StoreHome() {
               عرض كل المنتجات ←
             </Link>
           )}
-
         </div>
 
         <div className="bg-white rounded-3xl p-3 sm:p-5 border border-green-100 shadow-sm">
-
           {loading ? (
-
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[1, 2, 3, 4].map(i => (
                 <div key={i} className="animate-pulse">
@@ -319,9 +332,7 @@ export default function StoreHome() {
                 </div>
               ))}
             </div>
-
           ) : displayedProducts.length === 0 ? (
-
             <div className="text-center py-16">
               <div className="text-5xl mb-4">🔍</div>
 
@@ -333,7 +344,7 @@ export default function StoreHome() {
 
               <p className="text-gray-500 mt-2">
                 {searchTerm
-                  ? 'جرّب البحث باسم منتج آخر'
+                  ? 'جرّب البحث باسم منتج آخر أو كود المنتج'
                   : 'سيتم إضافة المنتجات قريباً'}
               </p>
 
@@ -346,18 +357,13 @@ export default function StoreHome() {
                 </Link>
               )}
             </div>
-
           ) : (
-
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
-
               {displayedProducts.map(p => (
-
                 <div
                   key={p.id}
                   className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition group"
                 >
-
                   <Link
                     to={`/product/${p.id}`}
                     className="block h-36 sm:h-52 lg:h-60 bg-green-50 overflow-hidden"
@@ -374,7 +380,6 @@ export default function StoreHome() {
                   </Link>
 
                   <div className="p-3 sm:p-4">
-
                     <Link to={`/product/${p.id}`}>
                       <h3 className="font-black text-[#0a3824] text-xs sm:text-base truncate mb-2">
                         {p.nameAr || p.name}
@@ -393,20 +398,13 @@ export default function StoreHome() {
                       onClick={() => handleAddToCart(p.id)}
                       className="w-full bg-[#116b3b] hover:bg-[#0a3824] disabled:opacity-50 text-white py-2.5 rounded-xl font-bold text-xs sm:text-sm transition"
                     >
-                      {addingId === p.id
-                        ? 'جاري الإضافة...'
-                        : '🛒 أضف للسلة'}
+                      {addingId === p.id ? 'جاري الإضافة...' : '🛒 أضف للسلة'}
                     </button>
-
                   </div>
                 </div>
-
               ))}
-
             </div>
-
           )}
-
         </div>
       </section>
 
@@ -415,11 +413,8 @@ export default function StoreHome() {
         id="design"
         className="max-w-7xl mx-auto px-3 sm:px-5 py-8 scroll-mt-36"
       >
-
         <div className="bg-[#0a3824] rounded-3xl p-5 sm:p-10 overflow-hidden">
-
           <div className="text-center mb-8">
-
             <span className="text-green-300 text-xs font-bold">
               MAKE IT GREEN
             </span>
@@ -431,11 +426,9 @@ export default function StoreHome() {
             <p className="text-green-100 text-sm mt-3">
               اختر مساحتك ودعنا نساعدك في تحويلها إلى مكان مميز
             </p>
-
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
-
             {spaces.map((item, index) => (
               <button
                 key={index}
@@ -456,28 +449,22 @@ export default function StoreHome() {
                 </div>
               </button>
             ))}
-
           </div>
 
           <div className="text-center mt-8">
-
             <button
               onClick={() => navigate('/design')}
               className="bg-yellow-400 hover:bg-yellow-300 text-green-950 px-8 py-3.5 rounded-xl font-black transition shadow-lg"
             >
               اطلب تصميم مساحتك الآن ←
             </button>
-
           </div>
-
         </div>
       </section>
 
       {/* Bottom Banner */}
       <section className="max-w-7xl mx-auto px-3 sm:px-5 pb-12">
-
         <div className="bg-green-100 rounded-3xl p-6 sm:p-10 flex flex-col sm:flex-row items-center justify-between gap-5">
-
           <div>
             <h2 className="text-xl sm:text-3xl font-black text-[#0a3824]">
               ابدأ رحلتك مع الطبيعة 🌱
@@ -494,10 +481,8 @@ export default function StoreHome() {
           >
             تسوق الآن
           </button>
-
         </div>
       </section>
-
     </div>
   );
 }

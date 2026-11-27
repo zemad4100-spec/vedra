@@ -1,4 +1,3 @@
-
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { cartService } from '../services/cartService';
@@ -15,25 +14,20 @@ export default function StoreLayout() {
   const isAdmin = user &&
     ['Admin', 'StoreManager'].includes(user.role);
 
-  // قراءة بيانات المستخدم
   useEffect(() => {
     try {
       const userData = localStorage.getItem('user');
-      if (userData) {
-        setUser(JSON.parse(userData));
-      }
+      if (userData) setUser(JSON.parse(userData));
     } catch (err) {
       console.error('User Error:', err);
     }
   }, []);
 
-  // تحديث مربع البحث من رابط الصفحة
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     setSearch(params.get('search') || '');
   }, [location.search]);
 
-  // تحديث عدد المنتجات في السلة
   const fetchCartCount = async () => {
     const sessionId = localStorage.getItem('sessionId');
 
@@ -54,7 +48,6 @@ export default function StoreLayout() {
     fetchCartCount();
 
     const updateCart = () => fetchCartCount();
-
     window.addEventListener('cart-updated', updateCart);
 
     return () => {
@@ -62,7 +55,6 @@ export default function StoreLayout() {
     };
   }, [location.pathname]);
 
-  // الانتقال للقسم المطلوب حتى عند القدوم من صفحة أخرى
   useEffect(() => {
     if (!location.hash) return;
 
@@ -78,25 +70,31 @@ export default function StoreLayout() {
     return () => window.clearTimeout(timer);
   }, [location.pathname, location.hash, location.search]);
 
-  // إغلاق قائمة الموبايل عند الانتقال
   useEffect(() => {
     setMobileMenu(false);
   }, [location.pathname, location.hash]);
 
-  // البحث داخل الصفحة الرئيسية
   const handleSearch = (e) => {
     e.preventDefault();
 
     const term = search.trim();
 
-    if (term) {
-      navigate(`/?search=${encodeURIComponent(term)}#products`);
-    } else {
-      navigate('/#products');
-    }
+    navigate({
+      pathname: '/',
+      search: term ? `?search=${encodeURIComponent(term)}` : '',
+      hash: '#products'
+    });
   };
 
-  // تسجيل الخروج
+  const clearSearch = () => {
+    setSearch('');
+    navigate({
+      pathname: '/',
+      search: '',
+      hash: '#products'
+    });
+  };
+
   const logout = () => {
     localStorage.clear();
     setUser(null);
@@ -118,51 +116,42 @@ export default function StoreLayout() {
   return (
     <div dir="rtl" className="min-h-screen flex flex-col bg-[#f7faf7]">
 
-      {/* Announcement */}
       <div className="bg-[#082e1d] text-white text-center py-2 px-3 text-xs sm:text-sm font-semibold">
         🌿 توصيل آمن لجميع نباتاتك — أضف لمسة خضراء لحياتك
       </div>
 
-      {/* Header */}
       <header className="bg-[#0a3824] sticky top-0 z-50 shadow-lg">
-
         <div className="max-w-7xl mx-auto px-3 sm:px-5 py-3">
-
           <div className="flex items-center justify-between gap-3">
 
-            {/* Mobile Menu Button */}
             <button
+              type="button"
               onClick={() => setMobileMenu(!mobileMenu)}
-              className="md:hidden w-10 h-10 rounded-xl bg-white/10 text-white text-xl flex items-center justify-center"
+              className="md:hidden w-10 h-10 rounded-xl bg-white/10 text-white text-xl flex items-center justify-center shrink-0"
               aria-label="القائمة"
             >
               {mobileMenu ? '✕' : '☰'}
             </button>
 
-            {/* Logo */}
             <Link to="/" className="flex items-center gap-2 shrink-0">
               <span className="text-3xl sm:text-4xl">🌿</span>
-
               <div>
                 <h1 className="text-2xl sm:text-3xl font-black text-white">
                   Verda
                 </h1>
-
                 <p className="text-[8px] text-green-300 font-bold tracking-widest">
                   LIVE GREEN · LIVE BETTER
                 </p>
               </div>
             </Link>
 
-            {/* Desktop Search */}
             <form
               onSubmit={handleSearch}
               className="hidden md:block flex-1 max-w-xl"
             >
               <div className="relative">
-
                 <input
-                  type="text"
+                  type="search"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="ابحث عن نبات أو منتج..."
@@ -172,11 +161,9 @@ export default function StoreLayout() {
                 {search && (
                   <button
                     type="button"
-                    onClick={() => {
-                      setSearch('');
-                      navigate('/#products');
-                    }}
+                    onClick={clearSearch}
                     className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                    aria-label="مسح البحث"
                   >
                     ✕
                   </button>
@@ -189,11 +176,9 @@ export default function StoreLayout() {
                 >
                   🔍
                 </button>
-
               </div>
             </form>
 
-            {/* Header Actions */}
             <div className="flex items-center gap-3 sm:gap-5 text-white">
 
               <Link
@@ -218,7 +203,6 @@ export default function StoreLayout() {
                 )}
               </Link>
 
-              {/* Admin Desktop */}
               {isAdmin && (
                 <Link
                   to="/admin"
@@ -243,16 +227,13 @@ export default function StoreLayout() {
                   دخول
                 </Link>
               )}
-
             </div>
           </div>
 
-          {/* Mobile Search */}
           <form onSubmit={handleSearch} className="md:hidden mt-3">
             <div className="relative">
-
               <input
-                type="text"
+                type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="ابحث عن نبات أو منتج..."
@@ -262,11 +243,9 @@ export default function StoreLayout() {
               {search && (
                 <button
                   type="button"
-                  onClick={() => {
-                    setSearch('');
-                    navigate('/#products');
-                  }}
+                  onClick={clearSearch}
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  aria-label="مسح البحث"
                 >
                   ✕
                 </button>
@@ -279,51 +258,29 @@ export default function StoreLayout() {
               >
                 🔍
               </button>
-
             </div>
           </form>
-
         </div>
 
-        {/* Desktop Navigation */}
         <nav className="hidden md:block bg-[#116b3b]">
           <div className="max-w-7xl mx-auto px-4 flex items-center gap-2 py-2">
-
-            <Link
-              to="/"
-              className="text-white px-4 py-2 rounded-lg hover:bg-white/10 font-bold text-sm"
-            >
+            <Link to="/" className="text-white px-4 py-2 rounded-lg hover:bg-white/10 font-bold text-sm">
               🏠 الرئيسية
             </Link>
-
-            <Link
-              to="/#products"
-              className="text-white px-4 py-2 rounded-lg hover:bg-white/10 font-bold text-sm"
-            >
+            <Link to="/#products" className="text-white px-4 py-2 rounded-lg hover:bg-white/10 font-bold text-sm">
               🛒 تسوق الآن
             </Link>
-
-            <Link
-              to="/#best-sellers"
-              className="text-white px-4 py-2 rounded-lg hover:bg-white/10 font-bold text-sm"
-            >
+            <Link to="/#best-sellers" className="text-white px-4 py-2 rounded-lg hover:bg-white/10 font-bold text-sm">
               ⭐ الأكثر مبيعاً
             </Link>
-
-            <Link
-              to="/#design"
-              className="text-white px-4 py-2 rounded-lg hover:bg-white/10 font-bold text-sm"
-            >
+            <Link to="/#design" className="text-white px-4 py-2 rounded-lg hover:bg-white/10 font-bold text-sm">
               🎨 صمم الآن
             </Link>
-
           </div>
         </nav>
 
-        {/* Mobile Dropdown Menu */}
         {mobileMenu && (
           <div className="md:hidden bg-white border-t border-green-100 shadow-xl p-4 space-y-2">
-
             {menuLink('/', 'الرئيسية', '🏠')}
             {menuLink('/#products', 'تسوق الآن', '🛒')}
             {menuLink('/#best-sellers', 'الأكثر مبيعاً', '⭐')}
@@ -331,7 +288,6 @@ export default function StoreLayout() {
             {menuLink('/products', 'كل المنتجات', '🌿')}
             {menuLink('/cart', 'سلة المشتريات', '🛍️')}
 
-            {/* Admin Mobile */}
             {isAdmin && (
               <Link
                 to="/admin"
@@ -351,37 +307,28 @@ export default function StoreLayout() {
                 🚪 تسجيل الخروج
               </button>
             )}
-
           </div>
         )}
-
       </header>
 
-      {/* Page Content */}
-      <main className="flex-1 pb-20 md:pb-0">
+      <main className="flex-1">
         <Outlet />
       </main>
 
-      {/* Footer */}
       <footer className="bg-[#082e1d] text-gray-300 mt-12">
-
         <div className="max-w-7xl mx-auto px-5 py-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
 
           <div>
             <h3 className="text-3xl font-black text-white mb-3">
               🌿 Verda
             </h3>
-
             <p className="text-sm leading-7">
               مساحتك الخضراء تبدأ من هنا. نباتات مختارة بعناية وأفكار تلهمك تضيف لمسة طبيعية لكل مكان.
             </p>
           </div>
 
           <div>
-            <h4 className="text-white font-bold mb-4">
-              روابط سريعة
-            </h4>
-
+            <h4 className="text-white font-bold mb-4">روابط سريعة</h4>
             <div className="space-y-3 flex flex-col text-sm">
               <Link to="/" className="hover:text-green-400">الرئيسية</Link>
               <Link to="/products" className="hover:text-green-400">تسوق النباتات</Link>
@@ -390,10 +337,7 @@ export default function StoreLayout() {
           </div>
 
           <div>
-            <h4 className="text-white font-bold mb-4">
-              خدمة العملاء
-            </h4>
-
+            <h4 className="text-white font-bold mb-4">خدمة العملاء</h4>
             <div className="space-y-3 flex flex-col text-sm">
               <a href="#" className="hover:text-green-400">سياسة الشحن</a>
               <a href="#" className="hover:text-green-400">الاستبدال والاسترجاع</a>
@@ -402,81 +346,19 @@ export default function StoreLayout() {
           </div>
 
           <div>
-            <h4 className="text-white font-bold mb-4">
-              تواصل معنا
-            </h4>
-
+            <h4 className="text-white font-bold mb-4">تواصل معنا</h4>
             <div className="space-y-3 text-sm">
               <p>📞 0100 000 0000</p>
               <p>✉️ hello@verda.example</p>
               <p>📍 القاهرة، مصر</p>
             </div>
           </div>
-
         </div>
 
         <div className="border-t border-white/10 py-5 text-center text-xs text-gray-400">
           © {new Date().getFullYear()} Verda — جميع الحقوق محفوظة
         </div>
-
       </footer>
-
-      {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-200 shadow-lg">
-
-        <div className="grid grid-cols-4 py-2">
-
-          <Link
-            to="/"
-            className="flex flex-col items-center gap-1 text-green-800 text-xs"
-          >
-            <span className="text-xl">🏠</span>
-            الرئيسية
-          </Link>
-
-          <Link
-            to="/#products"
-            className="flex flex-col items-center gap-1 text-gray-600 text-xs"
-          >
-            <span className="text-xl">🌿</span>
-            تسوق
-          </Link>
-
-          <Link
-            to="/cart"
-            className="relative flex flex-col items-center gap-1 text-gray-600 text-xs"
-          >
-            <span className="text-xl">🛒</span>
-            السلة
-
-            {cartCount > 0 && (
-              <span className="absolute top-0 right-1/2 translate-x-5 bg-red-500 text-white rounded-full text-[9px] px-1.5">
-                {cartCount}
-              </span>
-            )}
-          </Link>
-
-          {isAdmin ? (
-            <Link
-              to="/admin"
-              className="flex flex-col items-center gap-1 text-green-800 font-black text-xs"
-            >
-              <span className="text-xl">⚙️</span>
-              الإدارة
-            </Link>
-          ) : (
-            <Link
-              to={user ? '/profile' : '/login'}
-              className="flex flex-col items-center gap-1 text-gray-600 text-xs"
-            >
-              <span className="text-xl">👤</span>
-              حسابي
-            </Link>
-          )}
-
-        </div>
-      </div>
-
     </div>
   );
 }
