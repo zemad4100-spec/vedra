@@ -17,38 +17,100 @@ const normalizeText = (value) => {
     .replace(/\s+/g, ' ');
 };
 
+// استخراج الأقسام الرئيسية والفرعية
+const flattenCategories = (categories = []) => {
+  const result = [];
+
+  const visit = (items, parent = null) => {
+    items.forEach((category) => {
+      result.push({
+        ...category,
+        parentName: parent?.nameAr || null,
+        isChild: Boolean(parent)
+      });
+
+      if (Array.isArray(category.children) && category.children.length) {
+        visit(category.children, category);
+      }
+    });
+  };
+
+  visit(categories);
+  return result;
+};
+
+// تحديد أسماء الأقسام التابعة للقسم الرئيسي
+const getCategoryNames = (category, allCategories) => {
+  const names = [
+    normalizeText(category.nameAr),
+    normalizeText(category.nameEn)
+  ];
+
+  const addChildren = (parent) => {
+    (parent.children || []).forEach((child) => {
+      names.push(normalizeText(child.nameAr));
+      names.push(normalizeText(child.nameEn));
+      addChildren(child);
+    });
+  };
+
+  const original = allCategories.find((item) => item.id === category.id);
+
+  if (original) {
+    addChildren(original);
+  }
+
+  return names.filter(Boolean);
+};
+
 export default function StoreHome() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [addingId, setAddingId] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   const rawSearchTerm = searchParams.get('search') || '';
   const searchTerm = normalizeText(rawSearchTerm);
 
-  const categories = [
-    { icon: '🪴', name: 'نباتات منزلية' },
-    { icon: '🌳', name: 'نباتات خارجية' },
-    { icon: '🌵', name: 'نباتات صبار' },
-    { icon: '🧺', name: 'أدوات الزراعة' }
-  ];
+  const flatCategories = useMemo(
+    () => flattenCategories(categories),
+    [categories]
+  );
 
-  // فلترة المنتجات بالبحث والقسم المختار
+  // القسم المختار ومنتجات الأقسام التابعة له
+  const selectedCategoryNames = useMemo(() => {
+    if (!selectedCategory) return [];
+
+    const category = flatCategories.find(
+      (item) => item.id === selectedCategory
+    );
+
+    if (!category) return [];
+
+    return getCategoryNames(category, categories);
+  }, [selectedCategory, flatCategories, categories]);
+
+  // فلترة المنتجات
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
-      const categoryName = normalizeText(
-        p.categoryNameAr ||
-        p.category?.nameAr ||
-        p.category?.name ||
-        p.categoryName ||
-        ''
-      );
+      const productCategoryNames = [
+        normalizeText(p.categoryNameAr),
+        normalizeText(p.categoryNameEn),
+        normalizeText(p.category?.nameAr),
+        normalizeText(p.category?.nameEn),
+        normalizeText(p.category?.name),
+        normalizeText(p.categoryName)
+      ].filter(Boolean);
 
-      const matchesCategory = !selectedCategory ||
-        categoryName.includes(normalizeText(selectedCategory));
+      const matchesCategory =
+        !selectedCategory ||
+        productCategoryNames.some((name) =>
+          selectedCategoryNames.includes(name)
+        );
 
       const searchableFields = [
         p.nameAr,
@@ -67,18 +129,18 @@ export default function StoreHome() {
         p.category?.name
       ];
 
-      const matchesSearch = !searchTerm ||
+      const matchesSearch =
+        !searchTerm ||
         searchableFields.some((field) =>
           normalizeText(field).includes(searchTerm)
         );
 
       return matchesCategory && matchesSearch;
     });
-  }, [products, searchTerm, selectedCategory]);
+  }, [products, searchTerm, selectedCategory, selectedCategoryNames]);
 
-  const displayedProducts = searchTerm || selectedCategory
-    ? filteredProducts
-    : filteredProducts.slice(0, 8);
+  // عرض كل المنتجات بدون اقتصار على أول 8
+  const displayedProducts = filteredProducts;
 
   const scrollToSection = (id) => {
     document.getElementById(id)?.scrollIntoView({
@@ -87,27 +149,26 @@ export default function StoreHome() {
     });
   };
 
-  // اختيار قسم وعرض منتجاته في نفس الصفحة
-  const handleCategoryClick = (categoryName) => {
-    setSelectedCategory(categoryName);
+  // اختيار قسم
+  const handleCategoryClick = (categoryId) => {
+    setSelectedCategory(categoryId);
 
     navigate({
       pathname: '/',
-      search: '',
+      search: searchParams.toString() ? `?${searchParams.toString()}` : '',
       hash: '#products'
     });
 
-    setTimeout(() => {
-      scrollToSection('products');
-    }, 100);
+    setTimeout(() => scrollToSection('products'), 100);
   };
 
   // إلغاء فلترة القسم
   const clearCategory = () => {
-    setSelectedCategory('');
+    setSelectedCategory(null);
     setTimeout(() => scrollToSection('products'), 100);
   };
 
+  // تحميل جميع صفحات المنتجات والأقسام
   useEffect(() => {
     let cancelled = false;
 
@@ -115,19 +176,64 @@ export default function StoreHome() {
       setLoading(true);
 
       try {
-        const res = await api.get('/products', {
-          params: { pageSize: 100 }
-        });
+        const [categoriesResponse, firstProductsResponse] =
+          await Promise.all([
+            api.get('/Categories'),
+            api.get('/Products', {
+              params: {
+                pageNumber: 1,
+                pageSize: 100
+              }
+            })
+          ]);
+
+        const categoriesData =
+          categoriesResponse.data?.data || [];
+
+        const firstData =
+          firstProductsResponse.data?.data;
+
+        let allProducts = firstData?.items || [];
+
+        const totalPages = Number(firstData?.totalPages || 1);
+
+        // تحميل باقي الصفحات عند وجود منتجات إضافية
+        if (totalPages > 1) {
+          const pageRequests = [];
+
+          for (let page = 2; page <= totalPages; page++) {
+            pageRequests.push(
+              api.get('/Products', {
+                params: {
+                  pageNumber: page,
+                  pageSize: 100
+                }
+              })
+            );
+          }
+
+          const pageResponses = await Promise.all(pageRequests);
+
+          pageResponses.forEach((response) => {
+            const items = response.data?.data?.items || [];
+            allProducts = [...allProducts, ...items];
+          });
+        }
 
         if (!cancelled) {
-          const items = res.data?.data?.items || [];
-          setProducts(items);
+          setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+          setProducts(allProducts);
         }
       } catch (err) {
-        console.error('Products Error:', err);
-        if (!cancelled) showError('تعذر تحميل المنتجات');
+        console.error('Store Data Error:', err);
+
+        if (!cancelled) {
+          showError('تعذر تحميل المنتجات أو الأقسام');
+        }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
@@ -138,13 +244,14 @@ export default function StoreHome() {
     };
   }, []);
 
+  // إضافة للسلة
   const handleAddToCart = async (productId) => {
     if (addingId !== null) return;
 
     setAddingId(productId);
 
     try {
-      const res = await api.post('/cart/items', {
+      const res = await api.post('/Cart/items', {
         productId,
         quantity: 1
       });
@@ -206,6 +313,10 @@ export default function StoreHome() {
       img: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=500&q=80'
     }
   ];
+
+  const selectedCategoryName = flatCategories.find(
+    (item) => item.id === selectedCategory
+  )?.nameAr;
 
   return (
     <div dir="rtl" className="bg-[#f7faf7] overflow-hidden">
@@ -273,25 +384,56 @@ export default function StoreHome() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {categories.map((item, index) => (
-            <button
-              key={index}
-              type="button"
-              onClick={() => handleCategoryClick(item.name)}
-              className={`rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-center gap-3 transition ${
-                selectedCategory === item.name
-                  ? 'bg-[#0a3824] text-white border border-[#0a3824] shadow-lg'
-                  : 'bg-white text-[#0a3824] border border-green-100 hover:shadow-lg hover:border-green-400'
-              }`}
-            >
-              <span className="text-4xl">{item.icon}</span>
-              <span className="font-black text-sm sm:text-base">
-                {item.name}
-              </span>
-            </button>
-          ))}
+        <div className="flex flex-wrap justify-center gap-3 mb-4">
+          <button
+            type="button"
+            onClick={clearCategory}
+            className={`rounded-xl px-5 py-3 font-black text-sm transition ${
+              !selectedCategory
+                ? 'bg-[#0a3824] text-white shadow-lg'
+                : 'bg-white text-[#0a3824] border border-green-100 hover:border-green-400'
+            }`}
+          >
+            🌿 كل المنتجات
+          </button>
         </div>
+
+        {loading && categories.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            جاري تحميل الأقسام...
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {flatCategories.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => handleCategoryClick(item.id)}
+                className={`rounded-2xl p-4 sm:p-5 flex flex-col items-center justify-center gap-2 transition ${
+                  selectedCategory === item.id
+                    ? 'bg-[#0a3824] text-white border border-[#0a3824] shadow-lg'
+                    : item.isChild
+                      ? 'bg-green-50 text-[#0a3824] border border-green-100 hover:shadow-lg'
+                      : 'bg-white text-[#0a3824] border border-green-100 hover:shadow-lg hover:border-green-400'
+                }`}
+              >
+                <span className="text-3xl">
+                  {item.isChild ? '🪴' : '🌿'}
+                </span>
+
+                <span className="font-black text-xs sm:text-sm text-center">
+                  {item.nameAr}
+                </span>
+
+                {item.isChild && (
+                  <span className="text-[10px] opacity-70">
+                    قسم فرعي
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Features */}
@@ -354,8 +496,8 @@ export default function StoreHome() {
               {searchTerm
                 ? `نتائج البحث عن: ${rawSearchTerm}`
                 : selectedCategory
-                  ? selectedCategory
-                  : '⭐ الأكثر مبيعاً'}
+                  ? selectedCategoryName
+                  : '⭐ جميع المنتجات'}
             </h2>
 
             <p className="text-gray-500 text-xs mt-2">
@@ -377,24 +519,13 @@ export default function StoreHome() {
               </button>
             )}
 
-            {searchTerm ? (
+            {searchTerm && (
               <button
                 type="button"
                 onClick={() => navigate('/#products')}
                 className="bg-red-50 text-red-600 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap"
               >
                 مسح البحث ✕
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedCategory('');
-                  scrollToSection('products');
-                }}
-                className="hidden sm:inline-flex bg-green-100 text-green-800 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap"
-              >
-                عرض كل المنتجات ←
               </button>
             )}
           </div>
@@ -403,7 +534,7 @@ export default function StoreHome() {
         <div className="bg-white rounded-3xl p-3 sm:p-5 border border-green-100 shadow-sm">
           {loading ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[1, 2, 3, 4].map(i => (
+              {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="animate-pulse">
                   <div className="h-40 sm:h-56 bg-gray-100 rounded-2xl" />
                   <div className="h-4 bg-gray-100 rounded mt-4" />
@@ -433,8 +564,8 @@ export default function StoreHome() {
                 <button
                   type="button"
                   onClick={() => {
-                    setSelectedCategory('');
-                    navigate('/#products');
+                    setSelectedCategory(null);
+                    navigate('/');
                   }}
                   className="inline-block mt-5 bg-green-700 text-white px-6 py-3 rounded-xl font-bold"
                 >
@@ -444,7 +575,7 @@ export default function StoreHome() {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
-              {displayedProducts.map(p => (
+              {displayedProducts.map((p) => (
                 <div
                   key={p.id}
                   className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition group"
@@ -454,7 +585,11 @@ export default function StoreHome() {
                     className="block h-36 sm:h-52 lg:h-60 bg-green-50 overflow-hidden"
                   >
                     <img
-                      src={p.mainImageUrl || 'https://via.placeholder.com/400'}
+                      src={
+                        p.mainImageUrl?.startsWith('/')
+                          ? `${api.defaults.baseURL?.replace(/\/api\/?$/, '') || ''}${p.mainImageUrl}`
+                          : p.mainImageUrl || 'https://via.placeholder.com/400'
+                      }
                       alt={p.nameAr || p.name || 'منتج Verda'}
                       loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
@@ -471,12 +606,22 @@ export default function StoreHome() {
                       </h3>
                     </Link>
 
+                    <p className="text-gray-400 text-[10px] sm:text-xs mb-2 truncate">
+                      {p.categoryNameAr || ''}
+                    </p>
+
                     <div className="flex items-center justify-between gap-1 mb-3">
                       <span className="text-green-700 font-black text-sm sm:text-lg">
                         {Number(p.effectivePrice || 0).toLocaleString('ar-EG')} ج.م
                       </span>
                       <span className="text-yellow-500 text-xs">🌿</span>
                     </div>
+
+                    {p.hasActiveDiscount && (
+                      <p className="text-gray-400 text-xs line-through mb-2">
+                        {Number(p.basePrice || 0).toLocaleString('ar-EG')} ج.م
+                      </p>
+                    )}
 
                     <button
                       disabled={addingId !== null}
