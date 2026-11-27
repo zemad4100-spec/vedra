@@ -1,3 +1,4 @@
+
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { cartService } from '../services/cartService';
@@ -282,10 +283,9 @@ export default function StoreLayout() {
         {mobileMenu && (
           <div className="md:hidden bg-white border-t border-green-100 shadow-xl p-4 space-y-2">
             {menuLink('/', 'الرئيسية', '🏠')}
-            {menuLink('/#products', 'تسوق الآن', '🛒')}
+            {menuLink('/#products', 'الأقسام والمنتجات', '🛒')}
             {menuLink('/#best-sellers', 'الأكثر مبيعاً', '⭐')}
             {menuLink('/#design', 'صمم الآن', '🎨')}
-            {menuLink('/products', 'كل المنتجات', '🌿')}
             {menuLink('/cart', 'سلة المشتريات', '🛍️')}
 
             {isAdmin && (
@@ -331,8 +331,8 @@ export default function StoreLayout() {
             <h4 className="text-white font-bold mb-4">روابط سريعة</h4>
             <div className="space-y-3 flex flex-col text-sm">
               <Link to="/" className="hover:text-green-400">الرئيسية</Link>
-              <Link to="/products" className="hover:text-green-400">تسوق النباتات</Link>
-              <Link to="/design" className="hover:text-green-400">تصميم المساحات</Link>
+              <Link to="/#products" className="hover:text-green-400">تسوق النباتات</Link>
+              <Link to="/#design" className="hover:text-green-400">تصميم المساحات</Link>
             </div>
           </div>
 

@@ -1,9 +1,10 @@
+
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import { showSuccess, showError } from '../utils/toast';
 
-// توحيد النص العربي لتسهيل البحث
+// توحيد النص العربي لتسهيل البحث والمقارنة
 const normalizeText = (value) => {
   return String(value || '')
     .toLocaleLowerCase()
@@ -23,14 +24,32 @@ export default function StoreHome() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [addingId, setAddingId] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState('');
 
   const rawSearchTerm = searchParams.get('search') || '';
   const searchTerm = normalizeText(rawSearchTerm);
 
-  const filteredProducts = useMemo(() => {
-    if (!searchTerm) return products;
+  const categories = [
+    { icon: '🪴', name: 'نباتات منزلية' },
+    { icon: '🌳', name: 'نباتات خارجية' },
+    { icon: '🌵', name: 'نباتات صبار' },
+    { icon: '🧺', name: 'أدوات الزراعة' }
+  ];
 
+  // فلترة المنتجات بالبحث والقسم المختار
+  const filteredProducts = useMemo(() => {
     return products.filter((p) => {
+      const categoryName = normalizeText(
+        p.categoryNameAr ||
+        p.category?.nameAr ||
+        p.category?.name ||
+        p.categoryName ||
+        ''
+      );
+
+      const matchesCategory = !selectedCategory ||
+        categoryName.includes(normalizeText(selectedCategory));
+
       const searchableFields = [
         p.nameAr,
         p.name,
@@ -42,16 +61,22 @@ export default function StoreHome() {
         p.shortDescAr,
         p.shortDescEn,
         p.categoryNameAr,
-        p.categoryNameEn
+        p.categoryNameEn,
+        p.category?.nameAr,
+        p.category?.nameEn,
+        p.category?.name
       ];
 
-      return searchableFields.some((field) =>
-        normalizeText(field).includes(searchTerm)
-      );
-    });
-  }, [products, searchTerm]);
+      const matchesSearch = !searchTerm ||
+        searchableFields.some((field) =>
+          normalizeText(field).includes(searchTerm)
+        );
 
-  const displayedProducts = searchTerm
+      return matchesCategory && matchesSearch;
+    });
+  }, [products, searchTerm, selectedCategory]);
+
+  const displayedProducts = searchTerm || selectedCategory
     ? filteredProducts
     : filteredProducts.slice(0, 8);
 
@@ -60,6 +85,27 @@ export default function StoreHome() {
       behavior: 'smooth',
       block: 'start'
     });
+  };
+
+  // اختيار قسم وعرض منتجاته في نفس الصفحة
+  const handleCategoryClick = (categoryName) => {
+    setSelectedCategory(categoryName);
+
+    navigate({
+      pathname: '/',
+      search: '',
+      hash: '#products'
+    });
+
+    setTimeout(() => {
+      scrollToSection('products');
+    }, 100);
+  };
+
+  // إلغاء فلترة القسم
+  const clearCategory = () => {
+    setSelectedCategory('');
+    setTimeout(() => scrollToSection('products'), 100);
   };
 
   useEffect(() => {
@@ -142,13 +188,6 @@ export default function StoreHome() {
     }
   ];
 
-  const categories = [
-    { icon: '🪴', name: 'نباتات منزلية' },
-    { icon: '🌳', name: 'نباتات خارجية' },
-    { icon: '🌵', name: 'نباتات صبار' },
-    { icon: '🧺', name: 'أدوات الزراعة' }
-  ];
-
   const spaces = [
     {
       title: 'البلكونة',
@@ -225,15 +264,29 @@ export default function StoreHome() {
 
       {/* Categories */}
       <section className="max-w-7xl mx-auto px-3 sm:px-5 py-7">
+        <div className="text-center mb-5">
+          <h2 className="text-2xl font-black text-[#0a3824]">
+            تسوق حسب القسم
+          </h2>
+          <p className="text-gray-500 text-sm mt-2">
+            اختار القسم وشوف المنتجات الموجودة فيه
+          </p>
+        </div>
+
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {categories.map((item, index) => (
             <button
               key={index}
-              onClick={() => navigate('/products')}
-              className="bg-white border border-green-100 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-center gap-3 hover:shadow-lg hover:border-green-400 transition"
+              type="button"
+              onClick={() => handleCategoryClick(item.name)}
+              className={`rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-center gap-3 transition ${
+                selectedCategory === item.name
+                  ? 'bg-[#0a3824] text-white border border-[#0a3824] shadow-lg'
+                  : 'bg-white text-[#0a3824] border border-green-100 hover:shadow-lg hover:border-green-400'
+              }`}
             >
               <span className="text-4xl">{item.icon}</span>
-              <span className="font-black text-sm sm:text-base text-[#0a3824]">
+              <span className="font-black text-sm sm:text-base">
                 {item.name}
               </span>
             </button>
@@ -279,7 +332,7 @@ export default function StoreHome() {
         </div>
       </section>
 
-      {/* Products and Best Sellers */}
+      {/* Products */}
       <section
         id="products"
         className="max-w-7xl mx-auto px-3 sm:px-5 py-8 scroll-mt-36"
@@ -288,37 +341,63 @@ export default function StoreHome() {
           id="best-sellers"
           className="flex items-center justify-between gap-3 mb-5 scroll-mt-36"
         >
-          <div>
+          <div className="min-w-0">
             <span className="text-green-700 text-xs font-bold">
-              {searchTerm ? 'SEARCH RESULTS' : 'OUR PRODUCTS'}
+              {searchTerm
+                ? 'SEARCH RESULTS'
+                : selectedCategory
+                  ? 'CATEGORY PRODUCTS'
+                  : 'OUR PRODUCTS'}
             </span>
 
-            <h2 className="text-xl sm:text-3xl font-black text-[#0a3824]">
+            <h2 className="text-xl sm:text-3xl font-black text-[#0a3824] mt-1">
               {searchTerm
                 ? `نتائج البحث عن: ${rawSearchTerm}`
-                : '⭐ الأكثر مبيعاً'}
+                : selectedCategory
+                  ? selectedCategory
+                  : '⭐ الأكثر مبيعاً'}
             </h2>
 
             <p className="text-gray-500 text-xs mt-2">
-              {loading ? 'جاري تحميل المنتجات...' : `${filteredProducts.length} منتج`}
+              {loading
+                ? 'جاري تحميل المنتجات...'
+                : `${filteredProducts.length} منتج`}
             </p>
           </div>
 
-          {searchTerm ? (
-            <Link
-              to="/#products"
-              className="bg-red-50 text-red-600 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap"
-            >
-              مسح البحث ✕
-            </Link>
-          ) : (
-            <Link
-              to="/products"
-              className="bg-green-100 text-green-800 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap"
-            >
-              عرض كل المنتجات ←
-            </Link>
-          )}
+          <div className="flex items-center gap-2 shrink-0">
+
+            {selectedCategory && (
+              <button
+                type="button"
+                onClick={clearCategory}
+                className="bg-red-50 text-red-600 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap"
+              >
+                كل الأقسام ✕
+              </button>
+            )}
+
+            {searchTerm ? (
+              <button
+                type="button"
+                onClick={() => navigate('/#products')}
+                className="bg-red-50 text-red-600 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap"
+              >
+                مسح البحث ✕
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCategory('');
+                  scrollToSection('products');
+                }}
+                className="hidden sm:inline-flex bg-green-100 text-green-800 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap"
+              >
+                عرض كل المنتجات ←
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="bg-white rounded-3xl p-3 sm:p-5 border border-green-100 shadow-sm">
@@ -339,22 +418,28 @@ export default function StoreHome() {
               <h3 className="text-xl font-black text-gray-700">
                 {searchTerm
                   ? 'لم يتم العثور على منتجات'
-                  : 'لا توجد منتجات متاحة حالياً'}
+                  : selectedCategory
+                    ? 'لا توجد منتجات في هذا القسم'
+                    : 'لا توجد منتجات متاحة حالياً'}
               </h3>
 
               <p className="text-gray-500 mt-2">
                 {searchTerm
                   ? 'جرّب البحث باسم منتج آخر أو كود المنتج'
-                  : 'سيتم إضافة المنتجات قريباً'}
+                  : 'يمكنك اختيار قسم آخر أو عرض جميع المنتجات'}
               </p>
 
-              {searchTerm && (
-                <Link
-                  to="/#products"
+              {(searchTerm || selectedCategory) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory('');
+                    navigate('/#products');
+                  }}
                   className="inline-block mt-5 bg-green-700 text-white px-6 py-3 rounded-xl font-bold"
                 >
                   عرض جميع المنتجات
-                </Link>
+                </button>
               )}
             </div>
           ) : (
