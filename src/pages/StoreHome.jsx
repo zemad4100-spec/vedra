@@ -1,17 +1,44 @@
 
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import { showSuccess, showError } from '../utils/toast';
 
 export default function StoreHome() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [addingId, setAddingId] = useState(null);
 
-  // الانتقال إلى قسم داخل نفس الصفحة
+  const searchTerm = (searchParams.get('search') || '')
+    .trim()
+    .toLocaleLowerCase();
+
+  // البحث في المنتجات المحملة
+  const filteredProducts = products.filter((p) => {
+    if (!searchTerm) return true;
+
+    const searchableNames = [
+      p.nameAr,
+      p.name,
+      p.nameEn,
+      p.description
+    ];
+
+    return searchableNames
+      .filter(Boolean)
+      .some(name =>
+        String(name).toLocaleLowerCase().includes(searchTerm)
+      );
+  });
+
+  // عند وجود بحث نعرض كل النتائج، وبدون بحث نعرض 8 منتجات
+  const displayedProducts = searchTerm
+    ? filteredProducts
+    : filteredProducts.slice(0, 8);
+
   const scrollToSection = (id) => {
     document.getElementById(id)?.scrollIntoView({
       behavior: 'smooth',
@@ -19,16 +46,17 @@ export default function StoreHome() {
     });
   };
 
+  // تحميل المنتجات
   useEffect(() => {
     const fetchData = async () => {
       try {
         const res = await api.get('/products', {
-          params: { pageSize: 20 }
+          params: { pageSize: 100 }
         });
 
         setProducts(res.data?.data?.items || []);
       } catch (err) {
-        console.error(err);
+        console.error('Products Error:', err);
         showError('تعذر تحميل المنتجات');
       } finally {
         setLoading(false);
@@ -38,6 +66,7 @@ export default function StoreHome() {
     fetchData();
   }, []);
 
+  // الإضافة إلى السلة
   const handleAddToCart = async (productId) => {
     if (addingId !== null) return;
 
@@ -117,9 +146,8 @@ export default function StoreHome() {
   return (
     <div dir="rtl" className="bg-[#f7faf7] overflow-hidden">
 
-      {/* Hero Banner */}
+      {/* Hero */}
       <section className="max-w-7xl mx-auto px-3 sm:px-5 pt-5">
-
         <div className="relative min-h-[340px] sm:min-h-[430px] rounded-3xl overflow-hidden bg-[#0a3824] shadow-xl">
 
           <img
@@ -131,7 +159,6 @@ export default function StoreHome() {
           <div className="absolute inset-0 bg-gradient-to-l from-[#052c1c]/95 via-[#073b25]/75 to-transparent" />
 
           <div className="relative z-10 flex items-center min-h-[340px] sm:min-h-[430px] px-6 sm:px-12 lg:px-20">
-
             <div className="max-w-xl text-white">
 
               <span className="inline-block bg-green-400 text-green-950 px-4 py-2 rounded-full text-xs sm:text-sm font-black mb-5">
@@ -153,7 +180,6 @@ export default function StoreHome() {
 
               <div className="flex flex-wrap gap-3">
 
-                {/* تسوق الآن ينزل للمنتجات */}
                 <button
                   onClick={() => scrollToSection('products')}
                   className="bg-yellow-400 hover:bg-yellow-300 text-green-950 px-7 py-3.5 rounded-xl font-black shadow-lg transition"
@@ -161,7 +187,6 @@ export default function StoreHome() {
                   🛒 تسوق الآن
                 </button>
 
-                {/* صمم الآن ينزل للتصميم */}
                 <button
                   onClick={() => scrollToSection('design')}
                   className="border border-white/60 hover:bg-white/10 text-white px-7 py-3.5 rounded-xl font-bold transition"
@@ -172,19 +197,11 @@ export default function StoreHome() {
               </div>
             </div>
           </div>
-
-          <div className="absolute bottom-5 left-0 right-0 flex justify-center gap-2">
-            <span className="w-8 h-2 rounded-full bg-green-400" />
-            <span className="w-2 h-2 rounded-full bg-white/70" />
-            <span className="w-2 h-2 rounded-full bg-white/70" />
-          </div>
-
         </div>
       </section>
 
       {/* Categories */}
       <section className="max-w-7xl mx-auto px-3 sm:px-5 py-7">
-
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
 
           {categories.map((item, index) => (
@@ -244,34 +261,48 @@ export default function StoreHome() {
         </div>
       </section>
 
-      {/* Products / Best Sellers */}
+      {/* Products and Best Sellers */}
       <section
         id="products"
         className="max-w-7xl mx-auto px-3 sm:px-5 py-8 scroll-mt-36"
       >
 
-        {/* نفس القسم يستقبل زري تسوق والأكثر مبيعاً */}
         <div
           id="best-sellers"
-          className="flex items-center justify-between mb-5 scroll-mt-36"
+          className="flex items-center justify-between gap-3 mb-5 scroll-mt-36"
         >
 
           <div>
             <span className="text-green-700 text-xs font-bold">
-              OUR PRODUCTS
+              {searchTerm ? 'SEARCH RESULTS' : 'OUR PRODUCTS'}
             </span>
 
             <h2 className="text-xl sm:text-3xl font-black text-[#0a3824]">
-              ⭐ الأكثر مبيعاً
+              {searchTerm
+                ? `نتائج البحث عن: ${searchParams.get('search')}`
+                : '⭐ الأكثر مبيعاً'}
             </h2>
+
+            <p className="text-gray-500 text-xs mt-2">
+              {loading ? 'جاري تحميل المنتجات...' : `${filteredProducts.length} منتج`}
+            </p>
           </div>
 
-          <Link
-            to="/products"
-            className="bg-green-100 text-green-800 hover:bg-green-200 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition"
-          >
-            عرض كل المنتجات ←
-          </Link>
+          {searchTerm ? (
+            <Link
+              to="/#products"
+              className="bg-red-50 text-red-600 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap"
+            >
+              مسح البحث ✕
+            </Link>
+          ) : (
+            <Link
+              to="/products"
+              className="bg-green-100 text-green-800 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap"
+            >
+              عرض كل المنتجات ←
+            </Link>
+          )}
 
         </div>
 
@@ -289,23 +320,38 @@ export default function StoreHome() {
               ))}
             </div>
 
-          ) : products.length === 0 ? (
+          ) : displayedProducts.length === 0 ? (
 
             <div className="text-center py-16">
-              <div className="text-5xl mb-4">🪴</div>
-              <p className="font-bold text-gray-600">
-                لا توجد منتجات متاحة حالياً
+              <div className="text-5xl mb-4">🔍</div>
+
+              <h3 className="text-xl font-black text-gray-700">
+                {searchTerm
+                  ? 'لم يتم العثور على منتجات'
+                  : 'لا توجد منتجات متاحة حالياً'}
+              </h3>
+
+              <p className="text-gray-500 mt-2">
+                {searchTerm
+                  ? 'جرّب البحث باسم منتج آخر'
+                  : 'سيتم إضافة المنتجات قريباً'}
               </p>
-              <Link to="/products" className="text-green-700 mt-3 inline-block">
-                تصفح المتجر
-              </Link>
+
+              {searchTerm && (
+                <Link
+                  to="/#products"
+                  className="inline-block mt-5 bg-green-700 text-white px-6 py-3 rounded-xl font-bold"
+                >
+                  عرض جميع المنتجات
+                </Link>
+              )}
             </div>
 
           ) : (
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
 
-              {products.slice(0, 8).map(p => (
+              {displayedProducts.map(p => (
 
                 <div
                   key={p.id}
@@ -318,7 +364,7 @@ export default function StoreHome() {
                   >
                     <img
                       src={p.mainImageUrl || 'https://via.placeholder.com/400'}
-                      alt={p.nameAr}
+                      alt={p.nameAr || p.name || 'منتج Verda'}
                       loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
                       onError={(e) => {
@@ -331,7 +377,7 @@ export default function StoreHome() {
 
                     <Link to={`/product/${p.id}`}>
                       <h3 className="font-black text-[#0a3824] text-xs sm:text-base truncate mb-2">
-                        {p.nameAr}
+                        {p.nameAr || p.name}
                       </h3>
                     </Link>
 
@@ -347,7 +393,9 @@ export default function StoreHome() {
                       onClick={() => handleAddToCart(p.id)}
                       className="w-full bg-[#116b3b] hover:bg-[#0a3824] disabled:opacity-50 text-white py-2.5 rounded-xl font-bold text-xs sm:text-sm transition"
                     >
-                      {addingId === p.id ? 'جاري الإضافة...' : '🛒 أضف للسلة'}
+                      {addingId === p.id
+                        ? 'جاري الإضافة...'
+                        : '🛒 أضف للسلة'}
                     </button>
 
                   </div>
